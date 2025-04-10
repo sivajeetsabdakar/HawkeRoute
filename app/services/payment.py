@@ -91,7 +91,7 @@ class PaymentService:
         
         Args:
             payment_id (int): ID of the payment to refund
-            amount (Decimal, optional): Amount to refund. If None, refunds full amount
+            amount (Decimal, optional): Amount to refund. If None, refunds the full amount.
             reason (str, optional): Reason for the refund
             
         Returns:
@@ -102,62 +102,110 @@ class PaymentService:
             if not payment:
                 return {
                     'success': False,
-                    'error': 'Payment not found'
+                    'message': "Payment not found"
                 }
             
-            # Get refund amount
-            refund_amount = amount or payment.amount
-            if refund_amount > payment.amount:
+            # Check if payment is eligible for refund
+            if payment.status not in ['succeeded', 'paid']:
                 return {
                     'success': False,
-                    'error': 'Refund amount cannot exceed payment amount'
+                    'message': f"Payment with status '{payment.status}' cannot be refunded"
                 }
+            
+            # Check if already fully refunded
+            if payment.refunded_amount and payment.refunded_amount >= payment.amount:
+                return {
+                    'success': False,
+                    'message': "Payment has already been fully refunded"
+                }
+            
+            # Determine refund amount
+            refund_amount = amount
+            if refund_amount is None:
+                # Full refund
+                refund_amount = payment.amount - (payment.refunded_amount or 0)
+            else:
+                # Partial refund
+                refund_amount = Decimal(str(refund_amount))
+                remaining_amount = payment.amount - (payment.refunded_amount or 0)
+                if refund_amount > remaining_amount:
+                    return {
+                        'success': False,
+                        'message': f"Refund amount exceeds remaining amount ({remaining_amount})"
+                    }
             
             # Process refund with Stripe
-            refund = stripe.Refund.create(
-                payment_intent=payment.payment_intent_id,
-                amount=int(refund_amount * 100),  # Convert to cents
-                reason=reason
-            )
-            
-            # Update payment record
-            payment.refunded_amount = refund_amount
-            payment.refunded_at = datetime.utcnow()
-            payment.status = 'refunded'
-            
-            # Record refund history
-            PaymentService._record_payment_history(
-                payment.id,
-                'refunded',
-                'refund',
-                {
-                    'refund_id': refund.id,
-                    'amount': float(refund_amount),
-                    'reason': reason
+            try:
+                refund = stripe.Refund.create(
+                    payment_intent=payment.payment_intent_id,
+                    amount=int(refund_amount * 100),  # Convert to cents
+                    reason=reason
+                )
+                
+                # Update payment record
+                payment.refunded_amount = (payment.refunded_amount or 0) + refund_amount
+                payment.refunded_at = datetime.utcnow()
+                
+                # Update payment status
+                if payment.refunded_amount >= payment.amount:
+                    payment.status = 'refunded'
+                else:
+                    payment.status = 'partially_refunded'
+                
+                # Record refund in payment history
+                PaymentService._record_payment_history(
+                    payment_id=payment_id,
+                    status='succeeded',
+                    type='refund',
+                    details={
+                        'refund_id': refund.id,
+                        'amount': float(refund_amount),
+                        'reason': reason,
+                        'stripe_refund_id': refund.id
+                    }
+                )
+                
+                db.session.commit()
+                
+                return {
+                    'success': True,
+                    'message': "Refund processed successfully",
+                    'data': {
+                        'payment_id': payment_id,
+                        'refund_id': refund.id,
+                        'amount': float(refund_amount),
+                        'status': payment.status,
+                        'refunded_amount': float(payment.refunded_amount),
+                        'remaining_amount': float(payment.amount - payment.refunded_amount)
+                    }
                 }
-            )
-            
-            db.session.commit()
-            
-            return {
-                'success': True,
-                'payment': payment.to_dict(),
-                'refund_id': refund.id
-            }
-            
-        except stripe.error.StripeError as e:
-            logger.error(f"Stripe error processing refund: {str(e)}")
-            db.session.rollback()
-            return {
-                'success': False,
-                'error': str(e)
-            }
+                
+            except stripe.error.StripeError as e:
+                # Record failed refund attempt
+                PaymentService._record_payment_history(
+                    payment_id=payment_id,
+                    status='failed',
+                    type='refund',
+                    details={
+                        'amount': float(refund_amount),
+                        'reason': reason,
+                        'error': str(e)
+                    }
+                )
+                
+                db.session.commit()
+                
+                return {
+                    'success': False,
+                    'message': f"Stripe refund failed: {str(e)}"
+                }
+                
         except Exception as e:
-            logger.error(f"Error processing refund: {str(e)}")
             db.session.rollback()
+            logger.error(f"Error processing refund: {str(e)}")
             return {
                 'success': False,
-                'error': 'An unexpected error occurred'
+                'message': f"Error processing refund: {str(e)}"
             }
     
     @staticmethod
