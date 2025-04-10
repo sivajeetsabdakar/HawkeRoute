@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 from app.database import init_db, db
 from app.migrations import init_migrations
 from app.celery_app import create_celery_app
+from app.config import Config
 
 # Load environment variables
 load_dotenv()
@@ -23,7 +24,7 @@ def create_app(config=None):
     app = Flask(__name__)
     
     # Load configuration
-    app.config.from_object('app.config.default')
+    app.config.from_object(Config)
     if config:
         app.config.update(config)
     
