@@ -28,7 +28,7 @@ wheels/
 venv/
 ENV/
 env/
-.venv/
+.hawkeroute/
 
 # IDE
 .idea/
@@ -38,11 +38,23 @@ env/
 
 # Logs
 *.log
-logs/
+
+# Local development
+instance/
+.webassets-cache
 
 # Database
 *.db
 *.sqlite3
+
+# Coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+coverage.xml
+*.cover
 
 # OS
 .DS_Store
