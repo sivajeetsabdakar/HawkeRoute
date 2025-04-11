@@ -13,7 +13,7 @@ class Payment(db.Model):
     payment_method = db.Column(db.String(100), nullable=False)
     payment_intent_id = db.Column(db.String(100), unique=True, nullable=False)
     status = db.Column(db.String(20), nullable=False)
-    metadata = db.Column(db.JSON)
+    payment_metadata = db.Column(db.JSON)
     refunded_amount = db.Column(db.Numeric(10, 2))
     refunded_at = db.Column(db.DateTime)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -31,7 +31,7 @@ class Payment(db.Model):
         self.payment_method = payment_method
         self.payment_intent_id = payment_intent_id
         self.status = status
-        self.metadata = metadata
+        self.payment_metadata = metadata
     
     def to_dict(self):
         return {
@@ -42,7 +42,7 @@ class Payment(db.Model):
             'payment_method': self.payment_method,
             'payment_intent_id': self.payment_intent_id,
             'status': self.status,
-            'metadata': self.metadata,
+            'metadata': self.payment_metadata,
             'refunded_amount': float(self.refunded_amount) if self.refunded_amount else None,
             'refunded_at': self.refunded_at.isoformat() if self.refunded_at else None,
             'created_at': self.created_at.isoformat(),

@@ -7,6 +7,9 @@ from app import db
 from datetime import datetime, date
 import pytz
 from app.config import Config
+import logging
+
+logger = logging.getLogger(__name__)
 
 def optimize_routes():
     """Optimize routes for all hawkers with pending orders"""
@@ -53,6 +56,13 @@ def init_scheduler(app):
     scheduler.start()
     
     # Shut down the scheduler when the app is shutting down
-    app.teardown_appcontext(lambda _: scheduler.shutdown())
+    def shutdown_scheduler(exception=None):
+        try:
+            if scheduler.running:
+                scheduler.shutdown()
+        except Exception as e:
+            logger.error(f"Error shutting down scheduler: {str(e)}")
+    
+    app.teardown_appcontext(shutdown_scheduler)
     
     return scheduler 

@@ -7,9 +7,9 @@ from app import db
 from app.middleware.check_time import check_order_time
 from datetime import datetime
 
-orders_bp = Blueprint('orders', __name__)
+bp = Blueprint('orders', __name__)
 
-@orders_bp.route('', methods=['POST'])
+@bp.route('', methods=['POST'])
 @jwt_required()
 @check_order_time()
 def create_order():
@@ -83,7 +83,7 @@ def create_order():
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
-@orders_bp.route('', methods=['GET'])
+@bp.route('', methods=['GET'])
 @jwt_required()
 def get_orders():
     current_user_id = get_jwt_identity()
@@ -118,7 +118,7 @@ def get_orders():
     orders = query.order_by(Order.created_at.desc()).all()
     return jsonify([order.to_dict() for order in orders]), 200
 
-@orders_bp.route('/<int:order_id>', methods=['GET'])
+@bp.route('/<int:order_id>', methods=['GET'])
 @jwt_required()
 def get_order(order_id):
     current_user_id = get_jwt_identity()
@@ -139,7 +139,7 @@ def get_order(order_id):
     
     return jsonify(order.to_dict()), 200
 
-@orders_bp.route('/<int:order_id>/status', methods=['PATCH'])
+@bp.route('/<int:order_id>/status', methods=['PATCH'])
 @jwt_required()
 def update_order_status(order_id):
     current_user_id = get_jwt_identity()

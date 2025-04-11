@@ -1,6 +1,18 @@
 from flask_socketio import emit, join_room, leave_room
 from flask_login import current_user
-from app import socketio
+# Import socketio conditionally
+try:
+    from app import socketio
+    SOCKETIO_AVAILABLE = True
+except ImportError:
+    SOCKETIO_AVAILABLE = False
+    # Create a dummy socketio object for when it's not available
+    class DummySocketIO:
+        def on(self, *args, **kwargs):
+            def decorator(f):
+                return f
+            return decorator
+    socketio = DummySocketIO()
 from app.models.order import Order
 from app.models.user import User
 from app.services.route_optimizer import RouteOptimizer

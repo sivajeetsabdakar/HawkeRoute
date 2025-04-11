@@ -7,9 +7,9 @@ from datetime import datetime, timedelta
 import jwt
 from app.services.notification import NotificationService
 
-auth_bp = Blueprint('auth', __name__)
+bp = Blueprint('auth', __name__)
 
-@auth_bp.route('/register', methods=['POST'])
+@bp.route('/register', methods=['POST'])
 def register():
     data = request.get_json()
     
@@ -67,7 +67,7 @@ def register():
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
-@auth_bp.route('/login', methods=['POST'])
+@bp.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
     
@@ -93,14 +93,14 @@ def login():
         'refresh_token': refresh_token
     }), 200
 
-@auth_bp.route('/refresh', methods=['POST'])
+@bp.route('/refresh', methods=['POST'])
 @jwt_required(refresh=True)
 def refresh():
     current_user_id = get_jwt_identity()
     access_token = create_access_token(identity=current_user_id)
     return jsonify({'access_token': access_token}), 200
 
-@auth_bp.route('/me', methods=['GET'])
+@bp.route('/me', methods=['GET'])
 @jwt_required()
 def get_current_user():
     current_user_id = get_jwt_identity()
@@ -111,7 +111,7 @@ def get_current_user():
     
     return jsonify(user.to_dict()), 200
 
-@auth_bp.route('/logout', methods=['POST'])
+@bp.route('/logout', methods=['POST'])
 @jwt_required()
 def logout():
     jti = get_jwt()["jti"]
@@ -131,7 +131,7 @@ def logout():
 
     return jsonify({"message": "Successfully logged out"}), 200
 
-@auth_bp.route('/password-reset-request', methods=['POST'])
+@bp.route('/password-reset-request', methods=['POST'])
 def password_reset_request():
     data = request.get_json()
     email = data.get('email')
@@ -161,7 +161,7 @@ def password_reset_request():
 
     return jsonify({"message": "If your email is registered, you will receive a password reset link"}), 200
 
-@auth_bp.route('/password-reset', methods=['POST'])
+@bp.route('/password-reset', methods=['POST'])
 @jwt_required()
 def password_reset():
     # Verify token type
@@ -201,7 +201,7 @@ def password_reset():
 
     return jsonify({"message": "Password successfully reset"}), 200
 
-@auth_bp.route('/verify-email', methods=['POST'])
+@bp.route('/verify-email', methods=['POST'])
 @jwt_required()
 def verify_email():
     # Verify token type
@@ -236,7 +236,7 @@ def verify_email():
 
     return jsonify({"message": "Email successfully verified"}), 200
 
-@auth_bp.route('/resend-verification', methods=['POST'])
+@bp.route('/resend-verification', methods=['POST'])
 @jwt_required()
 def resend_verification():
     user_id = get_jwt_identity()

@@ -8,6 +8,7 @@ class GeocodingService:
     
     _instance = None
     _initialized = False
+    _client = None
     
     def __new__(cls):
         if cls._instance is None:
@@ -16,13 +17,21 @@ class GeocodingService:
     
     def __init__(self):
         if not GeocodingService._initialized:
-            api_key = current_app.config.get('GOOGLE_MAPS_API_KEY')
-            if api_key:
-                self.client = googlemaps.Client(key=api_key)
-                GeocodingService._initialized = True
-            else:
-                self.client = None
-                logging.warning("Google Maps API key not configured. Geocoding service will be disabled.")
+            GeocodingService._initialized = True
+    
+    def _get_client(self):
+        """Get or initialize the Google Maps client"""
+        if GeocodingService._client is None:
+            try:
+                api_key = current_app.config.get('GOOGLE_MAPS_API_KEY')
+                if api_key:
+                    GeocodingService._client = googlemaps.Client(key=api_key)
+                else:
+                    logging.warning("Google Maps API key not configured. Geocoding service will be disabled.")
+            except RuntimeError:
+                logging.warning("Cannot access application context. Geocoding service will be disabled.")
+        
+        return GeocodingService._client
     
     def geocode_address(self, address):
         """
@@ -40,11 +49,12 @@ class GeocodingService:
                 'components': dict
             }
         """
-        if not self.client:
+        client = self._get_client()
+        if not client:
             return None
         
         try:
-            result = self.client.geocode(address)
+            result = client.geocode(address)
             if not result:
                 return None
             
@@ -77,11 +87,12 @@ class GeocodingService:
                 'components': dict
             }
         """
-        if not self.client:
+        client = self._get_client()
+        if not client:
             return None
         
         try:
-            result = self.client.reverse_geocode((latitude, longitude))
+            result = client.reverse_geocode((latitude, longitude))
             if not result:
                 return None
             
@@ -124,11 +135,12 @@ class GeocodingService:
         Returns:
             dict: Distance matrix with durations and distances
         """
-        if not self.client:
+        client = self._get_client()
+        if not client:
             return None
         
         try:
-            result = self.client.distance_matrix(
+            result = client.distance_matrix(
                 origins,
                 destinations,
                 mode=mode,

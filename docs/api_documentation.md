@@ -4,59 +4,316 @@
 
 ### Base URL
 ```
-https://api.hawkeroute.com
+http://localhost:5000
 ```
-All API endpoints should be prefixed with this base URL.
-
-### CORS
-The server is configured to accept requests from allowed origins. Frontend developers should ensure their application's domain is added to the allowed origins list.
+All API endpoints should be prefixed with this base URL in development. For production, use the production URL.
 
 ### Authentication
 
-#### Session-based Authentication
-1. Login endpoint:
+The API uses JWT (JSON Web Token) for authentication. Include the JWT token in the Authorization header for protected endpoints:
+
 ```
-POST /api/auth/login
+Authorization: Bearer <your_jwt_token>
+```
+
+#### Authentication Endpoints
+
+1. Register a new user:
+```
+POST /auth/register
 ```
 Request body:
 ```json
 {
-  "username": "string",
+  "name": "string",
+  "email": "string",
+  "phone": "string",
+  "password": "string",
+  "role": "customer|hawker",
+  "business_name": "string",  // Required for hawkers
+  "business_address": "string",  // Required for hawkers
+  "latitude": number,  // Optional for hawkers
+  "longitude": number  // Optional for hawkers
+}
+```
+Response:
+```json
+{
+  "message": "Registration successful",
+  "user": {
+    "id": number,
+    "name": "string",
+    "email": "string",
+    "phone": "string",
+    "role": "string",
+    "business_name": "string",  // For hawkers
+    "business_address": "string"  // For hawkers
+  },
+  "access_token": "string",
+  "refresh_token": "string"
+}
+```
+
+2. Login:
+```
+POST /auth/login
+```
+Request body:
+```json
+{
+  "email": "string",
   "password": "string"
 }
 ```
 Response:
 ```json
 {
-  "success": true,
+  "message": "Login successful",
   "user": {
     "id": number,
-    "username": "string",
+    "name": "string",
+    "email": "string",
     "role": "string"
-  }
+  },
+  "access_token": "string",
+  "refresh_token": "string"
 }
 ```
 
-2. Logout endpoint:
+3. Refresh token:
 ```
-POST /api/auth/logout
+POST /auth/refresh
+```
+Headers:
+```
+Authorization: Bearer <refresh_token>
+```
+Response:
+```json
+{
+  "access_token": "string"
+}
 ```
 
-3. Get current user:
+4. Get current user:
 ```
-GET /api/auth/me
+GET /auth/me
+```
+Headers:
+```
+Authorization: Bearer <access_token>
+```
+Response:
+```json
+{
+  "id": number,
+  "name": "string",
+  "email": "string",
+  "role": "string"
+}
 ```
 
-The server uses HTTP-only cookies for session management. After successful login, all subsequent requests will automatically include the session cookie.
+5. Logout:
+```
+POST /auth/logout
+```
+Headers:
+```
+Authorization: Bearer <access_token>
+```
+Response:
+```json
+{
+  "message": "Successfully logged out"
+}
+```
 
-#### WebSocket Authentication
-WebSocket connections are automatically authenticated using the same session cookie. Ensure you enable credentials in your Socket.IO client configuration:
+### Product Management
+
+1. Get all products:
+```
+GET /products
+```
+Query parameters:
+- `hawker_id` (optional): Filter by hawker ID
+- `is_available` (optional): Filter by availability
+
+Response:
+```json
+[
+  {
+    "id": number,
+    "hawker_id": number,
+    "name": "string",
+    "description": "string",
+    "price": number,
+    "image_url": "string",
+    "is_available": boolean,
+    "created_at": "string",
+    "updated_at": "string"
+  }
+]
+```
+
+2. Create a product (Hawkers only):
+```
+POST /products
+```
+Headers:
+```
+Authorization: Bearer <access_token>
+```
+Request body:
+```json
+{
+  "name": "string",
+  "description": "string",
+  "price": number,
+  "image_url": "string",
+  "is_available": boolean
+}
+```
+Response:
+```json
+{
+  "id": number,
+  "hawker_id": number,
+  "name": "string",
+  "description": "string",
+  "price": number,
+  "image_url": "string",
+  "is_available": boolean,
+  "created_at": "string",
+  "updated_at": "string"
+}
+```
+
+3. Get a specific product:
+```
+GET /products/<product_id>
+```
+Response:
+```json
+{
+  "id": number,
+  "hawker_id": number,
+  "name": "string",
+  "description": "string",
+  "price": number,
+  "image_url": "string",
+  "is_available": boolean,
+  "created_at": "string",
+  "updated_at": "string"
+}
+```
+
+4. Update a product (Hawkers only):
+```
+PUT /products/<product_id>
+```
+Headers:
+```
+Authorization: Bearer <access_token>
+```
+Request body:
+```json
+{
+  "name": "string",
+  "description": "string",
+  "price": number,
+  "image_url": "string",
+  "is_available": boolean
+}
+```
+Response:
+```json
+{
+  "id": number,
+  "hawker_id": number,
+  "name": "string",
+  "description": "string",
+  "price": number,
+  "image_url": "string",
+  "is_available": boolean,
+  "created_at": "string",
+  "updated_at": "string"
+}
+```
+
+5. Delete a product (Hawkers only):
+```
+DELETE /products/<product_id>
+```
+Headers:
+```
+Authorization: Bearer <access_token>
+```
+Response:
+```json
+{
+  "message": "Product deleted successfully"
+}
+```
+
+## Error Handling
+
+All API endpoints return a consistent error format:
+
+```json
+{
+  "error": "Error message describing what went wrong"
+}
+```
+
+Common HTTP status codes:
+- 200: Success
+- 201: Created
+- 400: Bad Request (invalid input)
+- 401: Unauthorized (not authenticated)
+- 403: Forbidden (not authorized)
+- 404: Not Found
+- 409: Conflict (e.g., email already registered)
+- 500: Internal Server Error
+
+## Rate Limiting
+
+API endpoints are rate-limited to prevent abuse. The default limit is 100 requests per minute per IP address.
+
+## WebSocket Events
+
+The application uses Socket.IO for real-time communication. Connect to the WebSocket server using:
 
 ```javascript
-const socket = io('https://api.hawkeroute.com', {
-  withCredentials: true
+const socket = io('http://localhost:5000', {
+  auth: {
+    token: 'your_jwt_token'
+  }
 });
 ```
+
+### Events
+
+#### Connection Events
+- `connect`: Emitted when client connects to server
+- `disconnect`: Emitted when client disconnects from server
+
+#### Order Tracking Events
+- `join_order_tracking`: Join an order tracking room
+- `leave_order_tracking`: Leave an order tracking room
+- `tracking_joined`: Confirmation of joining tracking room
+- `tracking_left`: Confirmation of leaving tracking room
+
+#### Location Events
+- `location_update`: Update or receive location updates
+
+#### Order Status Events
+- `order_status_update`: Update or receive order status updates
+
+#### Route Events
+- `route_update`: Request or receive route updates
+
+#### ETA Events
+- `eta_update`: Receive ETA updates
 
 ## WebSocket API
 
@@ -582,32 +839,9 @@ GET /api/eta/{order_id}
    }
    ```
 
-## Error Handling
-
-All API endpoints return a consistent error format:
-
-```json
-{
-  "success": false,
-  "message": "Error message describing what went wrong"
-}
-```
-
-Common HTTP status codes:
-- 200: Success
-- 400: Bad Request (invalid input)
-- 401: Unauthorized (not authenticated)
-- 403: Forbidden (not authorized)
-- 404: Not Found
-- 500: Internal Server Error
-
 ## Authentication
 
 All API endpoints and WebSocket connections require authentication. The application uses session-based authentication with cookies.
-
-## Rate Limiting
-
-API endpoints are rate-limited to prevent abuse. The default limit is 100 requests per minute per IP address.
 
 ## WebSocket Rooms
 

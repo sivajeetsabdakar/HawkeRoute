@@ -3,14 +3,28 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.models.user import User
 from app.models.order import Order
 from app.models.route import HawkerRoute
-from app import db, socketio
+from app import db
 from datetime import datetime, date
 import pytz
 from app.config import Config
 
-delivery_bp = Blueprint('delivery', __name__)
+# Import socketio conditionally
+try:
+    from app import socketio
+    SOCKETIO_AVAILABLE = True
+except ImportError:
+    SOCKETIO_AVAILABLE = False
+    # Create a dummy socketio object for when it's not available
+    class DummySocketIO:
+        def on(self, *args, **kwargs):
+            def decorator(f):
+                return f
+            return decorator
+    socketio = DummySocketIO()
 
-@delivery_bp.route('/route', methods=['GET'])
+bp = Blueprint('delivery', __name__)
+
+@bp.route('/route', methods=['GET'])
 @jwt_required()
 def get_route():
     current_user_id = get_jwt_identity()
@@ -34,7 +48,7 @@ def get_route():
     
     return jsonify(route.to_dict()), 200
 
-@delivery_bp.route('/location', methods=['POST'])
+@bp.route('/location', methods=['POST'])
 @jwt_required()
 def update_location():
     current_user_id = get_jwt_identity()
@@ -69,7 +83,7 @@ def update_location():
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
-@delivery_bp.route('/track/<int:hawker_id>', methods=['GET'])
+@bp.route('/track/<int:hawker_id>', methods=['GET'])
 @jwt_required()
 def track_hawker(hawker_id):
     current_user_id = get_jwt_identity()
@@ -117,26 +131,27 @@ def track_hawker(hawker_id):
     }), 200
 
 # Socket.IO event handlers
-@socketio.on('connect', namespace='/delivery')
-def handle_connect():
-    print('Client connected to delivery namespace')
+if SOCKETIO_AVAILABLE:
+    @socketio.on('connect', namespace='/delivery')
+    def handle_connect():
+        print('Client connected to delivery namespace')
 
-@socketio.on('disconnect', namespace='/delivery')
-def handle_disconnect():
-    print('Client disconnected from delivery namespace')
+    @socketio.on('disconnect', namespace='/delivery')
+    def handle_disconnect():
+        print('Client disconnected from delivery namespace')
 
-@socketio.on('join_tracking', namespace='/delivery')
-def handle_join_tracking(data):
-    """Join a room to track a specific hawker"""
-    if 'hawker_id' in data:
-        room = f"hawker_{data['hawker_id']}"
-        socketio.join_room(room, namespace='/delivery')
-        print(f'Client joined room: {room}')
+    @socketio.on('join_tracking', namespace='/delivery')
+    def handle_join_tracking(data):
+        """Join a room to track a specific hawker"""
+        if 'hawker_id' in data:
+            room = f"hawker_{data['hawker_id']}"
+            socketio.join_room(room, namespace='/delivery')
+            print(f'Client joined room: {room}')
 
-@socketio.on('leave_tracking', namespace='/delivery')
-def handle_leave_tracking(data):
-    """Leave a room to stop tracking a specific hawker"""
-    if 'hawker_id' in data:
-        room = f"hawker_{data['hawker_id']}"
-        socketio.leave_room(room, namespace='/delivery')
-        print(f'Client left room: {room}') 
+    @socketio.on('leave_tracking', namespace='/delivery')
+    def handle_leave_tracking(data):
+        """Leave a room to stop tracking a specific hawker"""
+        if 'hawker_id' in data:
+            room = f"hawker_{data['hawker_id']}"
+            socketio.leave_room(room, namespace='/delivery')
+            print(f'Client left room: {room}') 

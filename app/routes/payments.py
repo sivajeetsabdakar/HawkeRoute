@@ -7,7 +7,7 @@ from app import db
 import razorpay
 from datetime import datetime
 
-payments_bp = Blueprint('payments', __name__)
+bp = Blueprint('payments', __name__)
 
 def get_razorpay_client():
     """Get Razorpay client instance"""
@@ -15,7 +15,7 @@ def get_razorpay_client():
         auth=(current_app.config['RAZORPAY_KEY_ID'], current_app.config['RAZORPAY_KEY_SECRET'])
     )
 
-@payments_bp.route('/initiate', methods=['POST'])
+@bp.route('/initiate', methods=['POST'])
 @jwt_required()
 def initiate_payment():
     current_user_id = get_jwt_identity()
@@ -84,7 +84,7 @@ def initiate_payment():
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
-@payments_bp.route('/verify', methods=['POST'])
+@bp.route('/verify', methods=['POST'])
 @jwt_required()
 def verify_payment():
     current_user_id = get_jwt_identity()
@@ -143,7 +143,7 @@ def verify_payment():
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
-@payments_bp.route('/cod', methods=['POST'])
+@bp.route('/cod', methods=['POST'])
 @jwt_required()
 def record_cod_payment():
     current_user_id = get_jwt_identity()

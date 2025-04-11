@@ -8,7 +8,7 @@ from app import db
 from datetime import datetime, timedelta
 from sqlalchemy import func
 
-admin_bp = Blueprint('admin', __name__)
+bp = Blueprint('admin', __name__)
 
 def admin_required(f):
     """Decorator to check if the user is an admin"""
@@ -25,7 +25,7 @@ def admin_required(f):
     decorated_function.__name__ = f.__name__
     return decorated_function
 
-@admin_bp.route('/users', methods=['GET'])
+@bp.route('/users', methods=['GET'])
 @admin_required
 def get_users():
     # Get query parameters
@@ -53,7 +53,7 @@ def get_users():
     users = query.order_by(User.created_at.desc()).all()
     return jsonify([user.to_dict() for user in users]), 200
 
-@admin_bp.route('/users/<int:user_id>', methods=['GET'])
+@bp.route('/users/<int:user_id>', methods=['GET'])
 @admin_required
 def get_user(user_id):
     user = User.query.get(user_id)
@@ -62,7 +62,7 @@ def get_user(user_id):
     
     return jsonify(user.to_dict()), 200
 
-@admin_bp.route('/users/<int:user_id>', methods=['PUT'])
+@bp.route('/users/<int:user_id>', methods=['PUT'])
 @admin_required
 def update_user(user_id):
     user = User.query.get(user_id)
@@ -94,7 +94,7 @@ def update_user(user_id):
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
-@admin_bp.route('/users/<int:user_id>', methods=['DELETE'])
+@bp.route('/users/<int:user_id>', methods=['DELETE'])
 @admin_required
 def delete_user(user_id):
     user = User.query.get(user_id)
@@ -111,7 +111,7 @@ def delete_user(user_id):
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
-@admin_bp.route('/orders', methods=['GET'])
+@bp.route('/orders', methods=['GET'])
 @admin_required
 def get_orders():
     # Get query parameters
@@ -148,7 +148,7 @@ def get_orders():
     orders = query.order_by(Order.created_at.desc()).all()
     return jsonify([order.to_dict() for order in orders]), 200
 
-@admin_bp.route('/orders/<int:order_id>', methods=['GET'])
+@bp.route('/orders/<int:order_id>', methods=['GET'])
 @admin_required
 def get_order(order_id):
     order = Order.query.get(order_id)
@@ -157,7 +157,7 @@ def get_order(order_id):
     
     return jsonify(order.to_dict()), 200
 
-@admin_bp.route('/orders/<int:order_id>/resolve', methods=['POST'])
+@bp.route('/orders/<int:order_id>/resolve', methods=['POST'])
 @admin_required
 def resolve_order_dispute(order_id):
     order = Order.query.get(order_id)
@@ -203,7 +203,7 @@ def resolve_order_dispute(order_id):
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
-@admin_bp.route('/products', methods=['GET'])
+@bp.route('/products', methods=['GET'])
 @admin_required
 def get_products():
     # Get query parameters
@@ -223,7 +223,7 @@ def get_products():
     products = query.order_by(Product.created_at.desc()).all()
     return jsonify([product.to_dict() for product in products]), 200
 
-@admin_bp.route('/products/<int:product_id>', methods=['PUT'])
+@bp.route('/products/<int:product_id>', methods=['PUT'])
 @admin_required
 def update_product(product_id):
     product = Product.query.get(product_id)
@@ -249,7 +249,7 @@ def update_product(product_id):
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
-@admin_bp.route('/dashboard', methods=['GET'])
+@bp.route('/dashboard', methods=['GET'])
 @admin_required
 def get_dashboard_stats():
     # Get date range

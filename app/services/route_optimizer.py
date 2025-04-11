@@ -8,8 +8,10 @@ from datetime import datetime, date, timedelta
 import math
 import json
 import numpy as np
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Any
 import requests
+import googlemaps
+import os
 
 class RouteOptimizer:
     def __init__(self, hawker_id, delivery_date):
@@ -19,7 +21,8 @@ class RouteOptimizer:
         self.orders = self._get_orders()
         self.locations = self._prepare_locations()
         self.distance_matrix = self._create_distance_matrix()
-        self.api_key = None  # Google Maps API key should be set in config
+        self.api_key = None  # Google Maps API key should be set in config 
+        self.gmaps = googlemaps.Client(key=os.environ.get('GOOGLE_MAPS_API_KEY'))
         
     def _get_orders(self):
         """Get all pending orders for the hawker on the specified date"""
@@ -401,4 +404,74 @@ class RouteOptimizer:
             return {
                 'success': False,
                 'message': f"Failed to calculate ETA: {str(e)}"
-            } 
+            }
+
+    @staticmethod
+    def optimize_routes(hawker: User) -> Dict[str, Any]:
+        """Optimize delivery routes for a hawker's pending orders."""
+        # Get all confirmed orders that need to be delivered
+        orders = Order.query.filter_by(
+            hawker_id=hawker.id,
+            status='confirmed'
+        ).all()
+        
+        if not orders:
+            return {'message': 'No orders to optimize'}
+        
+        # Extract delivery addresses
+        waypoints = [(order.id, order.delivery_address) for order in orders]
+        
+        # Get hawker's current location as starting point
+        origin = hawker.current_location or hawker.base_location
+        
+        try:
+            # Request directions from Google Maps
+            result = self.gmaps.directions(
+                origin=origin,
+                destination=origin,  # Return to starting point
+                waypoints=waypoints,
+                optimize_waypoints=True,
+                mode="driving"
+            )
+            
+            if not result:
+                return {'error': 'Could not calculate route'}
+            
+            # Get the optimized waypoint order
+            optimized_order = result[0]['waypoint_order']
+            
+            # Update order sequence
+            for sequence, waypoint_index in enumerate(optimized_order):
+                order_id = waypoints[waypoint_index][0]
+                order = next((o for o in orders if o.id == order_id), None)
+                if order:
+                    order.delivery_sequence = sequence + 1
+                    
+                    # Calculate and set estimated delivery time
+                    leg = result[0]['legs'][sequence]
+                    duration_seconds = leg['duration']['value']
+                    order.estimated_delivery_time = datetime.utcnow().timestamp() + duration_seconds
+            
+            # Save changes
+            db.session.commit()
+            
+            return {
+                'success': True,
+                'route': result[0],
+                'orders': [{'id': orders[i].id, 'sequence': seq + 1} 
+                          for seq, i in enumerate(optimized_order)]
+            }
+            
+        except Exception as e:
+            db.session.rollback()
+            return {'error': str(e)}
+
+    @staticmethod
+    def get_eta(order: Order) -> int:
+        """Get estimated time of arrival in minutes for an order."""
+        if not order.estimated_delivery_time:
+            return None
+            
+        now = datetime.utcnow().timestamp()
+        eta_seconds = max(0, order.estimated_delivery_time - now)
+        return round(eta_seconds / 60)  # Convert to minutes 

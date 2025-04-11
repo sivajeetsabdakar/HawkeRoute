@@ -31,7 +31,6 @@ class Order(db.Model):
     
     # Payment related fields
     payment_status = db.Column(db.String(20), default='pending')  # pending, paid, refunded, partially_refunded
-    payment_id = db.Column(db.Integer, db.ForeignKey('payments.id'), nullable=True)
     
     # Cancellation related fields
     cancelled_at = db.Column(db.DateTime, nullable=True)
@@ -63,7 +62,6 @@ class Order(db.Model):
             'created_at': self.created_at.isoformat(),
             'updated_at': self.updated_at.isoformat(),
             'payment_status': self.payment_status,
-            'payment_id': self.payment_id,
             'cancelled_at': self.cancelled_at.isoformat() if self.cancelled_at else None,
             'cancelled_by': self.cancelled_by,
             'cancellation_reason': self.cancellation_reason,

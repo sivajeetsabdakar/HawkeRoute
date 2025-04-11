@@ -10,12 +10,13 @@ from app.database import init_db, db
 from app.migrations import init_migrations
 from app.celery_app import create_celery_app
 from app.config import Config
+from app.cli import init_db_command
 
 # Load environment variables
 load_dotenv()
 
 # Initialize extensions
-socketio = SocketIO()
+# socketio = SocketIO()  # Temporarily disabled
 jwt = JWTManager()
 mail = Mail()
 
@@ -32,7 +33,7 @@ def create_app(config=None):
     CORS(app)
     jwt.init_app(app)
     mail.init_app(app)
-    socketio.init_app(app, message_queue=os.getenv('SOCKETIO_MESSAGE_QUEUE', 'redis://localhost:6379/0'))
+    # socketio.init_app(app, message_queue=os.getenv('SOCKETIO_MESSAGE_QUEUE', 'redis://localhost:6379/0'))  # Temporarily disabled
     
     # Initialize database
     init_db(app)
@@ -43,14 +44,21 @@ def create_app(config=None):
     # Initialize Celery
     celery = create_celery_app(app)
     
+    # Register CLI commands
+    app.cli.add_command(init_db_command)
+    
     # Register blueprints
-    from app.routes import auth, user, order, hawker, admin, payment
-    app.register_blueprint(auth.bp)
-    app.register_blueprint(user.bp)
-    app.register_blueprint(order.bp)
-    app.register_blueprint(hawker.bp)
-    app.register_blueprint(admin.bp)
-    app.register_blueprint(payment.bp)
+    from app.routes import auth, user, order, hawker, admin, payments, products, orders, location, delivery
+    app.register_blueprint(auth.bp, url_prefix='/api/auth')
+    app.register_blueprint(user.bp, url_prefix='/api/user')
+    app.register_blueprint(order.bp, url_prefix='/api/order')
+    app.register_blueprint(hawker.bp, url_prefix='/api/hawker')
+    app.register_blueprint(admin.bp, url_prefix='/api/admin')
+    app.register_blueprint(payments.bp, url_prefix='/api/payments')
+    app.register_blueprint(products.bp, url_prefix='/api/products')
+    app.register_blueprint(orders.bp, url_prefix='/api/orders')
+    app.register_blueprint(location.bp, url_prefix='/api/location')
+    app.register_blueprint(delivery.bp, url_prefix='/api/delivery')
     
     # Register error handlers
     from app.errors import register_error_handlers

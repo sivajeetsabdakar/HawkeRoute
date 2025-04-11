@@ -5,9 +5,9 @@ from app.models.user import User
 from app import db
 from datetime import datetime
 
-products_bp = Blueprint('products', __name__)
+bp = Blueprint('products', __name__)
 
-@products_bp.route('', methods=['GET'])
+@bp.route('', methods=['GET'])
 def get_products():
     # Get query parameters
     hawker_id = request.args.get('hawker_id', type=int)
@@ -26,7 +26,7 @@ def get_products():
     products = query.order_by(Product.created_at.desc()).all()
     return jsonify([product.to_dict() for product in products]), 200
 
-@products_bp.route('', methods=['POST'])
+@bp.route('', methods=['POST'])
 @jwt_required()
 def create_product():
     current_user_id = get_jwt_identity()
@@ -61,7 +61,7 @@ def create_product():
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
-@products_bp.route('/<int:product_id>', methods=['GET'])
+@bp.route('/<int:product_id>', methods=['GET'])
 def get_product(product_id):
     product = Product.query.get(product_id)
     if not product:
@@ -69,7 +69,7 @@ def get_product(product_id):
     
     return jsonify(product.to_dict()), 200
 
-@products_bp.route('/<int:product_id>', methods=['PUT'])
+@bp.route('/<int:product_id>', methods=['PUT'])
 @jwt_required()
 def update_product(product_id):
     current_user_id = get_jwt_identity()
@@ -108,7 +108,7 @@ def update_product(product_id):
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
-@products_bp.route('/<int:product_id>', methods=['DELETE'])
+@bp.route('/<int:product_id>', methods=['DELETE'])
 @jwt_required()
 def delete_product(product_id):
     current_user_id = get_jwt_identity()

@@ -1,4 +1,4 @@
-from flask import request, jsonify, current_app
+from flask import Blueprint, request, jsonify, current_app
 from flask_login import login_required, current_user
 from app.services.order_service import OrderService
 from app.schemas.order_rating_schema import OrderRatingSchema
@@ -6,6 +6,9 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.middleware.validation import validate_request
 from app.schemas.order_schema import OrderCreateSchema, OrderUpdateSchema, OrderCancellationSchema, OrderRefundSchema
 from datetime import datetime
+
+# Create blueprint
+bp = Blueprint('order', __name__, url_prefix='/api/orders')
 
 @bp.route('/orders/<int:order_id>/rate', methods=['POST'])
 @login_required
