@@ -150,9 +150,9 @@ export default function Home() {
               </div>
             </div>
             <p className="text-gray-600">
-              "I love being able to order from my favorite street food vendors
+              I love being able to order from my favorite street food vendors
               without having to travel. The delivery is always prompt and the
-              food is fresh!"
+              food is fresh!
             </p>
           </div>
 
@@ -165,8 +165,8 @@ export default function Home() {
               </div>
             </div>
             <p className="text-gray-600">
-              "Since joining HawkeRoute, my business has grown by 40%. The route
-              optimization helps me deliver more orders efficiently."
+              Since joining HawkeRoute, my business has grown by 40%. The route
+              optimization helps me deliver more orders efficiently.
             </p>
           </div>
 
@@ -179,9 +179,9 @@ export default function Home() {
               </div>
             </div>
             <p className="text-gray-600">
-              "HawkeRoute has made it so easy to discover new hawkers in my
-              area. I've found some amazing food that I wouldn't have known
-              about otherwise!"
+              HawkeRoute has made it so easy to discover new hawkers in my area.
+              I&apos;ve found some amazing food that I wouldn&apos;t have known
+              about otherwise!
             </p>
           </div>
         </div>
