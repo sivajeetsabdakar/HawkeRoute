@@ -19,11 +19,6 @@ import Button from "@/components/ui/Button";
 import { useAuth } from "@/contexts/AuthContext";
 import { ordersAPI, deliveryAPI } from "@/lib/api";
 import { formatCurrency, formatDate, formatTime } from "@/lib/utils";
-import {
-  joinTrackingRoom,
-  onLocationUpdate,
-  leaveTrackingRoom,
-} from "@/lib/socket";
 
 export default function OrderDetailPage() {
   const { id } = useParams();
@@ -36,6 +31,7 @@ export default function OrderDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [hawkerLocation, setHawkerLocation] = useState(null);
+  const [cancelLoading, setCancelLoading] = useState(false);
 
   useEffect(() => {
     const fetchOrderDetails = async () => {
@@ -58,8 +54,10 @@ export default function OrderDetailPage() {
             setTracking(trackingResponse.data);
             setHawker(trackingResponse.data.hawker);
 
-            // Join the tracking room to get real-time updates
-            joinTrackingRoom(response.data.hawker_id);
+            // Set initial hawker location from tracking data
+            if (trackingResponse.data.location) {
+              setHawkerLocation(trackingResponse.data.location);
+            }
           } catch (trackingErr) {
             console.error("Error fetching tracking info:", trackingErr);
           }
@@ -73,26 +71,28 @@ export default function OrderDetailPage() {
     };
 
     fetchOrderDetails();
+  }, [id, isAuthenticated]);
 
-    // Set up real-time location updates
-    const unsubscribe = onLocationUpdate((data) => {
-      if (data && data.hawker_id === order?.hawker_id) {
-        setHawkerLocation({
-          latitude: data.latitude,
-          longitude: data.longitude,
-          timestamp: data.timestamp,
-        });
-      }
-    });
+  const handleCancelOrder = async () => {
+    if (
+      !order ||
+      !window.confirm("Are you sure you want to cancel this order?")
+    ) {
+      return;
+    }
 
-    // Clean up
-    return () => {
-      if (order?.hawker_id) {
-        leaveTrackingRoom(order.hawker_id);
-      }
-      unsubscribe();
-    };
-  }, [id, isAuthenticated, order?.hawker_id]);
+    try {
+      setCancelLoading(true);
+      const response = await ordersAPI.cancelOrder(order.id);
+      setOrder((prev) => ({ ...prev, status: "cancelled" }));
+      alert("Order has been cancelled successfully");
+    } catch (err) {
+      console.error("Error cancelling order:", err);
+      alert("Failed to cancel order. Please try again later.");
+    } finally {
+      setCancelLoading(false);
+    }
+  };
 
   if (!isAuthenticated) {
     return (
@@ -377,8 +377,10 @@ export default function OrderDetailPage() {
               <Button
                 variant="outline"
                 className="text-red-600 border-red-600 hover:bg-red-50 w-full mb-2"
+                onClick={handleCancelOrder}
+                disabled={cancelLoading}
               >
-                Cancel Order
+                {cancelLoading ? "Cancelling..." : "Cancel Order"}
               </Button>
             ) : null}
 
