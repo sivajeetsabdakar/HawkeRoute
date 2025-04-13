@@ -84,12 +84,14 @@ export default function CartPage() {
 
       // Create order
       const response = await ordersAPI.createOrder(orderData);
+      console.log("--->", response);
 
       // Clear cart
       clearCart();
 
       // Redirect to payment page
-      router.push(`/payment/${response.data.id}`);
+      router.push(`/`);
+      alert("Order created successfully");
     } catch (err) {
       console.error("Error creating order:", err);
       setError("Failed to create order. Please try again.");
@@ -231,29 +233,6 @@ export default function CartPage() {
             </div>
 
             <div className="mt-6 space-y-4">
-              <div>
-                <label
-                  htmlFor="hawker"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Select Hawker <span className="text-red-500">*</span>
-                </label>
-                <select
-                  id="hawker"
-                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500"
-                  value={selectedHawkerId}
-                  onChange={(e) => setSelectedHawkerId(e.target.value)}
-                  required
-                >
-                  <option value="">Select a hawker</option>
-                  <option value="1">Manek Chowk Food Street</option>
-                  <option value="2">Law Garden Food Stalls</option>
-                  <option value="3">Bhatiyar Gali</option>
-                  <option value="4">Alpha One Food Court</option>
-                  <option value="5">Kankaria Lake Food Zone</option>
-                </select>
-              </div>
-
               <div>
                 <label
                   htmlFor="address"
