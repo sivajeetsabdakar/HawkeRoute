@@ -18,7 +18,7 @@ const Footer = () => {
           <div>
             <h3 className="text-lg font-semibold mb-4">HawkeRoute</h3>
             <p className="text-gray-400 mb-4">
-              Connecting customers with street food vendors for a delicious food
+              Connecting customers with hawkers for a fast and efficient
               delivery experience.
             </p>
             <div className="flex space-x-4">
