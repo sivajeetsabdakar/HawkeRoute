@@ -29,6 +29,7 @@ const Navbar = () => {
     { href: "/hawkers", label: "Hawkers" },
     { href: "/orders", label: "My Orders" },
     { href: "/products", label: "Products" },
+    { href: "/location", label: "Location" },
   ];
 
   const hawkerLinks = [
