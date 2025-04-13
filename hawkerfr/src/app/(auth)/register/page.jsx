@@ -77,7 +77,7 @@ export default function RegisterPage() {
             Create an Account
           </h1>
           <p className="text-gray-600 mt-2">
-            Join HawkeRoute to order from or sell street food
+            Join HawkeRoute to order from street food
           </p>
         </div>
 
@@ -87,30 +87,7 @@ export default function RegisterPage() {
           </div>
         )}
 
-        <div className="flex border-b mb-6">
-          <button
-            type="button"
-            className={`flex-1 py-2 font-medium text-center ${
-              userType === "customer"
-                ? "text-orange-600 border-b-2 border-orange-600"
-                : "text-gray-500 hover:text-gray-700"
-            }`}
-            onClick={() => toggleUserType("customer")}
-          >
-            Register as Customer
-          </button>
-          <button
-            type="button"
-            className={`flex-1 py-2 font-medium text-center ${
-              userType === "hawker"
-                ? "text-orange-600 border-b-2 border-orange-600"
-                : "text-gray-500 hover:text-gray-700"
-            }`}
-            onClick={() => toggleUserType("hawker")}
-          >
-            Register as Hawker
-          </button>
-        </div>
+      
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <input type="hidden" {...register("role")} value={userType} />
@@ -186,73 +163,7 @@ export default function RegisterPage() {
             })}
           />
 
-          {userType === "hawker" && (
-            <div className="border-t border-gray-200 pt-4 mt-6">
-              <h3 className="text-lg font-medium mb-4">
-                Hawker Business Details
-              </h3>
-
-              <div className="space-y-4">
-                <Input
-                  label="Business Name"
-                  id="business_name"
-                  placeholder="Your Street Food Business"
-                  error={errors.business_name?.message}
-                  {...register("business_name", {
-                    required:
-                      userType === "hawker"
-                        ? "Business name is required"
-                        : false,
-                  })}
-                />
-
-                <Input
-                  label="Business Address"
-                  id="business_address"
-                  placeholder="123 Street Name, City"
-                  error={errors.business_address?.message}
-                  {...register("business_address", {
-                    required:
-                      userType === "hawker"
-                        ? "Business address is required"
-                        : false,
-                  })}
-                />
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Input
-                    label="Latitude"
-                    id="latitude"
-                    placeholder="1.2345"
-                    error={errors.latitude?.message}
-                    {...register("latitude", {
-                      required:
-                        userType === "hawker" ? "Latitude is required" : false,
-                      pattern: {
-                        value: /^-?\d+(\.\d+)?$/,
-                        message: "Please enter a valid latitude",
-                      },
-                    })}
-                  />
-
-                  <Input
-                    label="Longitude"
-                    id="longitude"
-                    placeholder="6.7890"
-                    error={errors.longitude?.message}
-                    {...register("longitude", {
-                      required:
-                        userType === "hawker" ? "Longitude is required" : false,
-                      pattern: {
-                        value: /^-?\d+(\.\d+)?$/,
-                        message: "Please enter a valid longitude",
-                      },
-                    })}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
+          
 
           <div className="pt-4">
             <Button type="submit" fullWidth isLoading={isLoading}>
