@@ -68,6 +68,7 @@ export default function CartPage() {
 
       // Get current position for delivery coordinates
       const position = await getCurrentPosition();
+      console.log("--->", position);
 
       // Create order data
       const orderData = {
