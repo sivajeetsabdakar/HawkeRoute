@@ -187,7 +187,7 @@ export default function HawkersPage() {
           ) : (
             <>
               {sortedHawkers.length === 0 ? (
-                <div className="text-center py-12">
+                <div className="text-center py-12">                                                                                                                                                                         
                   <p className="text-gray-600 text-lg">
                     No hawkers found within {radius}km of your location.
                   </p>
