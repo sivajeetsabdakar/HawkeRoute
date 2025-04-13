@@ -25,7 +25,7 @@ const ProductCard = ({ product, onAddToCart }) => {
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:shadow-lg hover:-translate-y-1">
       <div className="relative h-48">
-        <Image
+        <img
           src={imageSrc}
           alt={name}
           fill
