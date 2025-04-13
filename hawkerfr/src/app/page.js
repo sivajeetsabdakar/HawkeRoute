@@ -11,13 +11,12 @@ export default function Home() {
       <section className="relative -mx-4 sm:-mx-6 md:-mx-8 lg:-mx-16 xl:-mx-24 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-black to-transparent z-10"></div>
         <div className="relative w-full h-[500px]">
-          <Image
-            src="/images/hero-food.jpg"
-            alt="Street food vendor"
-            fill
-            priority
-            className="object-cover"
-          />
+        <img
+  src="https://media.istockphoto.com/id/182766047/photo/indian-banana-seller.jpg?s=2048x2048&w=is&k=20&c=0X_jEsRYTcOwfY9TLLVNs6h7dU41z_tJLj4jj_LpnrQ="
+  alt="Street food vendor"
+  class="w-full h-200 object-cover"
+/>
+
         </div>
         <div className="absolute inset-0 z-20 flex items-center">
           <div className="container mx-auto px-4">
