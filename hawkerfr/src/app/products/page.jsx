@@ -2,16 +2,17 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { FiShoppingCart, FiSearch, FiImage } from "react-icons/fi";
+import { FiShoppingCart, FiSearch } from "react-icons/fi";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import { productsAPI } from "@/lib/api";
 import { useCart } from "@/contexts/CartContext";
 import { formatCurrency } from "@/lib/utils";
 import Link from "next/link";
+import ProductCard from "@/components/products/ProductCard";
 
 export default function ProductsPage() {
-  const { addToCart, cartItems } = useCart();
+  const { addToCart, cartItems = [] } = useCart();
 
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -29,6 +30,8 @@ export default function ProductsPage() {
         // Set products from API response
         if (response && response.data && Array.isArray(response.data)) {
           setProducts(response.data);
+        } else if (response && response.data && response.data.status === "success" && Array.isArray(response.data.data)) {
+          setProducts(response.data.data);
         } else {
           console.error("Unexpected API response format:", response);
           setProducts([]);
@@ -57,16 +60,12 @@ export default function ProductsPage() {
 
   // Filter products by selected category and search query
   const filteredProducts = products
-    .filter((product) => product.is_available)
-    .filter(
-      (product) =>
-        selectedCategory === "all" || product.category === selectedCategory
-    )
+    .filter((product) => selectedCategory === "all" || product.category === selectedCategory)
     .filter(
       (product) =>
         searchQuery.trim() === "" ||
-        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.description.toLowerCase().includes(searchQuery.toLowerCase())
+        (product.name && product.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (product.description && product.description.toLowerCase().includes(searchQuery.toLowerCase()))
     );
 
   const handleAddToCart = (product) => {
@@ -75,6 +74,8 @@ export default function ProductsPage() {
       id: product.id,
       name: product.name,
       price: product.price,
+      hawker_id: product.hawker_id,
+      image_url: product.image_url,
     };
 
     addToCart(simplifiedProduct);
@@ -125,7 +126,7 @@ export default function ProductsPage() {
 
           <Link href="/cart">
             <Button leftIcon={<FiShoppingCart />}>
-              {/* Cart ({cartItems.length}) */}
+              Cart ({cartItems?.length || 0})
             </Button>
           </Link>
         </div>
@@ -155,45 +156,11 @@ export default function ProductsPage() {
       {/* Products */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredProducts.map((product) => (
-          <Card key={product.id} className="overflow-hidden">
-            <div className="relative h-48 bg-gray-100 flex items-center justify-center">
-              {/* Use a div with background-image instead of Next.js Image for external URLs */}
-              <div
-                className="w-full h-full bg-cover bg-center"
-                style={{
-                  backgroundImage: `url('/images/product-default.jpg')`,
-                  backgroundSize: "cover",
-                  backgroundPosition: "center",
-                }}
-              >
-                <div className="flex items-center justify-center h-full">
-                  <FiImage size={48} className="text-gray-400" />
-                </div>
-              </div>
-            </div>
-            <div className="p-4">
-              <div className="flex justify-between items-start">
-                <h3 className="text-lg font-medium">{product.name}</h3>
-                <span className="font-medium text-orange-600">
-                  {formatCurrency(product.price)}
-                </span>
-              </div>
-              <p className="text-gray-600 mt-2 line-clamp-2">
-                {product.description}
-              </p>
-
-              <div className="flex justify-between items-center mt-4">
-                {product.category && (
-                  <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
-                    {product.category}
-                  </span>
-                )}
-                <Button size="sm" onClick={() => handleAddToCart(product)}>
-                  Add to Cart
-                </Button>
-              </div>
-            </div>
-          </Card>
+          <ProductCard 
+            key={product.id} 
+            product={product} 
+            onAddToCart={() => handleAddToCart(product)} 
+          />
         ))}
       </div>
 
