@@ -77,7 +77,7 @@ export default function RegisterPage() {
             Create an Account
           </h1>
           <p className="text-gray-600 mt-2">
-            Join HawkeRoute to order from street food
+            Join HawkeRoute to order products or services at your doorstep
           </p>
         </div>
 

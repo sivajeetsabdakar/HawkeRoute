@@ -224,7 +224,7 @@ export default function PaymentPage() {
                     <span className="ml-2 font-medium">Cash on Delivery</span>
                   </div>
                   <p className="text-sm text-gray-500 mt-1">
-                    Pay when you receive your food
+                    Pay when you receive your products or services
                   </p>
                 </div>
               </div>

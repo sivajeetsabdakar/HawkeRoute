@@ -96,23 +96,18 @@ export default function HawkerDetailPage() {
 
         // Fetch all products and filter by hawker_id
         try {
-          const productsResponse = await productsAPI.getAllProducts();
+          const productsResponse = await productsAPI.getAllProducts({
+            hawker_id: hawkerId // Use the query parameter to filter by hawker
+          });
           
-          let allProducts = [];
+          let hawkerProducts = [];
           if (productsResponse.data && productsResponse.data.status === "success") {
-            allProducts = productsResponse.data.data;
+            hawkerProducts = productsResponse.data.data;
           } else if (Array.isArray(productsResponse.data)) {
-            allProducts = productsResponse.data;
+            hawkerProducts = productsResponse.data;
           }
           
-          console.log("All products:", allProducts);
-          
-          // Filter products by hawker_id
-          const hawkerProducts = allProducts.filter(
-            product => String(product.hawker_id) === String(hawkerId)
-          );
-          
-          console.log("Filtered products:", hawkerProducts);
+          console.log("Hawker products:", hawkerProducts);
           
           if (hawkerProducts.length > 0) {
             setProducts(hawkerProducts);
@@ -237,7 +232,7 @@ export default function HawkerDetailPage() {
       {/* Hawker Info */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         <div className="md:col-span-2">
-          {/* <h2 className="text-2xl font-bold mb-4">
+          <h2 className="text-2xl font-bold mb-4">
             About {hawker.business_name || hawker.name}
           </h2>
           {hawker.description ? (
@@ -246,9 +241,9 @@ export default function HawkerDetailPage() {
             <p className="text-gray-600 mb-6">
               This hawker offers delicious food. Visit or order to experience their menu.
             </p>
-          )} */}
+          )}
 
-          {/* <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
             {hawker.working_hours && (
               <div className="flex items-center text-gray-600">
                 <FiClock className="mr-2 text-orange-600" />
@@ -276,7 +271,7 @@ export default function HawkerDetailPage() {
                 </div>
               </div>
             )}
-          </div> */}
+          </div>
 
           {userLocation && hawker.latitude && hawker.longitude && (
             <div className="bg-orange-50 p-4 rounded-lg mb-6">
@@ -296,7 +291,32 @@ export default function HawkerDetailPage() {
           )}
         </div>
 
-        
+        <div className="bg-gray-50 p-4 rounded-lg">
+          <h3 className="font-bold text-lg mb-3">Location</h3>
+          {hawker.latitude && hawker.longitude ? (
+            <div className="aspect-square bg-gray-200 rounded mb-3 flex items-center justify-center">
+              {/* Map placeholder - would be replaced with actual map component */}
+              <p className="text-gray-500 text-sm text-center p-4">
+                Map view coming soon
+              </p>
+            </div>
+          ) : (
+            <p className="text-gray-500 mb-3">Location not available</p>
+          )}
+          
+          {hawker.business_address && (
+            <div className="mb-3">
+              <h4 className="font-medium text-sm">Address:</h4>
+              <p className="text-gray-600">{hawker.business_address}</p>
+            </div>
+          )}
+          
+          {hawker.latitude && hawker.longitude && (
+            <Link href={`https://maps.google.com/?q=${hawker.latitude},${hawker.longitude}`} target="_blank">
+              <Button fullWidth variant="outline">Get Directions</Button>
+            </Link>
+          )}
+        </div>
       </div>
 
       {/* Menu */}

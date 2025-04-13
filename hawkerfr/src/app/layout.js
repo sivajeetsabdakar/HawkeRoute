@@ -8,9 +8,9 @@ import Footer from "@/components/layout/Footer";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "HawkeRoute - Connecting Customers with Street Food Vendors",
+  title: "HawkeRoute - Connecting Customers with Hawkers",
   description:
-    "Order street food directly from your favorite hawkers for home delivery",
+    "Order products or services directly from your favorite hawkers for home delivery",
 };
 
 export default function RootLayout({ children }) {
