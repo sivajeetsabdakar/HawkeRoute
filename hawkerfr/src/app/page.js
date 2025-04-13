@@ -13,7 +13,7 @@ export default function Home() {
         <div className="relative w-full h-[500px]">
         <img
   src="https://media.istockphoto.com/id/182766047/photo/indian-banana-seller.jpg?s=2048x2048&w=is&k=20&c=0X_jEsRYTcOwfY9TLLVNs6h7dU41z_tJLj4jj_LpnrQ="
-  alt="Street food vendor"
+  alt="Hawker"
   class="w-full h-200 object-cover"
 />
 
@@ -53,7 +53,7 @@ export default function Home() {
             </div>
             <h3 className="text-xl font-semibold mb-3 text-black">Discover Hawkers</h3>
             <p className="text-gray-600">
-              Find street food vendors near you with our easy-to-use search
+              Find hawkers near you with our easy-to-use search
               feature.
             </p>
           </div>
@@ -62,7 +62,7 @@ export default function Home() {
             <div className="mx-auto w-16 h-16 flex items-center justify-center rounded-full bg-orange-100 text-orange-600 mb-4">
               <FiMapPin size={24} />
             </div>
-            <h3 className="text-xl font-semibold mb-3 text-black">Order Food</h3>
+            <h3 className="text-xl font-semibold mb-3 text-black">Order Products or Services</h3>
             <p className="text-gray-600">
               Browse menus, select your favorite dishes, and place your order in
               minutes.
@@ -75,7 +75,7 @@ export default function Home() {
             </div>
             <h3 className="text-xl font-semibold mb-3 text-black ">Get Delivery</h3>
             <p className="text-gray-600">
-              Track your order in real-time and enjoy fresh street food at your
+              Track your order in real-time and enjoy fresh products or services at your
               doorstep.
             </p>
           </div>
@@ -86,66 +86,16 @@ export default function Home() {
       
 
       {/* Testimonials Section */}
-      <section className="container mx-auto">
-        <h2 className="text-3xl font-bold text-center mb-12">
-          What Our Users Say
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <div className="flex items-center mb-4">
-              <div className="w-12 h-12 rounded-full bg-gray-200 mr-4"></div>
-              <div>
-                <h4 className="font-semibold">Sarah Lee</h4>
-                <p className="text-sm text-gray-600">Customer</p>
-              </div>
-            </div>
-            <p className="text-gray-600">
-              I love being able to order from my favorite street food vendors
-              without having to travel. The delivery is always prompt and the
-              food is fresh!
-            </p>
-          </div>
-
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <div className="flex items-center mb-4">
-              <div className="w-12 h-12 rounded-full bg-gray-200 mr-4"></div>
-              <div>
-                <h4 className="font-semibold">Ahmad Khan</h4>
-                <p className="text-sm text-gray-600">Hawker</p>
-              </div>
-            </div>
-            <p className="text-gray-600">
-              Since joining HawkeRoute, my business has grown by 40%. The route
-              optimization helps me deliver more orders efficiently.
-            </p>
-          </div>
-
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <div className="flex items-center mb-4">
-              <div className="w-12 h-12 rounded-full bg-gray-200 mr-4"></div>
-              <div>
-                <h4 className="font-semibold">Mei Lin</h4>
-                <p className="text-sm text-gray-600">Customer</p>
-              </div>
-            </div>
-            <p className="text-gray-600">
-              HawkeRoute has made it so easy to discover new hawkers in my area.
-              I&apos;ve found some amazing food that I wouldn&apos;t have known
-              about otherwise!
-            </p>
-          </div>
-        </div>
-      </section>
+      
 
       {/* CTA Section */}
       <section className="bg-orange-600 py-16 -mx-4 sm:-mx-6 md:-mx-8 lg:-mx-16 xl:-mx-24">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold text-white mb-6">
-            Ready to Order Delicious Street Food?
+            Ready to Order any Product or Service?
           </h2>
           <p className="text-xl text-white mb-8 max-w-2xl mx-auto">
-            Join thousands of satisfied customers who enjoy street food
-            delivered to their doorstep.
+            Join thousands of satisfied customers who enjoy our services.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/hawkers">
