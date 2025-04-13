@@ -127,6 +127,13 @@ export const locationAPI = {
     api.get(`/api/location/nearby-hawkers`, {
       params: { latitude, longitude, radius },
     }),
+  getNearbyHawkers: (params) => api.get("/api/location/nearby-hawkers", { params }),
+};
+
+// Hawker API
+export const hawkerAPI = {
+  getProfile: (hawkerId) => api.get(`/api/hawker/profile/${hawkerId}`),
+  getProducts: (hawkerId) => api.get(`/api/hawker/products/${hawkerId}`),
 };
 
 // Delivery Tracking API
