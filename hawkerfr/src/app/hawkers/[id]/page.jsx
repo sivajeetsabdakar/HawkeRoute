@@ -110,7 +110,14 @@ export default function HawkerDetailPage() {
   }, [hawkerId]);
 
   const handleAddToCart = (product) => {
-    addToCart(product);
+    // Create a simplified product object with only the necessary information
+    const simplifiedProduct = {
+      id: product.id,
+      name: product.name,
+      price: product.price,
+    };
+
+    addToCart(simplifiedProduct);
   };
 
   if (loading) {

@@ -87,6 +87,19 @@ export default function RegisterPage() {
           </div>
         )}
 
+        <div className="flex border-b mb-6">
+          <button
+            type="button"
+            className={`flex-1 py-2 font-medium text-center ${
+              userType === "customer"
+                ? "text-orange-600 border-b-2 border-orange-600"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+            onClick={() => toggleUserType("customer")}
+          >
+            Register as Customer
+          </button>
+        </div>
       
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
