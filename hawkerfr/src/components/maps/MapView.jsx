@@ -79,7 +79,7 @@ const MapView = ({ onSelectHawker }) => {
     try {
       setLoading(true);
       console.log("Fetching nearby hawkers at:", latitude, longitude);
-      const response = await locationAPI.getNearbyHawkers(latitude, longitude);
+      const response = await locationAPI.getNearbyHawkerss(latitude, longitude);
       console.log("Nearby hawkers response:", response.data);
 
       // Handle the array response from the API

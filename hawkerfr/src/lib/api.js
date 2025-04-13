@@ -123,11 +123,12 @@ export const locationAPI = {
   getLocationHistory: (params) => api.get("/api/location/history", { params }),
   updateHawkerLocation: (locationData) =>
     api.put("/api/hawker/location", locationData),
-  getNearbyHawkers: (latitude, longitude, radius = 5000) =>
+  getNearbyHawkerss: (latitude, longitude, radius = 5000) =>
     api.get(`/api/location/nearby-hawkers`, {
       params: { latitude, longitude, radius },
     }),
-  getNearbyHawkers: (params) => api.get("/api/location/nearby-hawkers", { params }),
+  getNearbyHawkers: (params) =>
+    api.get("/api/location/nearby-hawkers", { params }),
 };
 
 // Hawker API
