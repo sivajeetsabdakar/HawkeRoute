@@ -122,6 +122,13 @@ export const locationAPI = {
   getLocationHistory: (params) => api.get("/api/location/history", { params }),
   updateHawkerLocation: (locationData) =>
     api.put("/api/hawker/location", locationData),
+  getNearbyHawkers: (params) => api.get("/api/location/nearby-hawkers", { params }),
+};
+
+// Hawker API
+export const hawkerAPI = {
+  getProfile: (hawkerId) => api.get(`/api/hawker/profile/${hawkerId}`),
+  getProducts: (hawkerId) => api.get(`/api/hawker/products/${hawkerId}`),
 };
 
 // Delivery Tracking API
