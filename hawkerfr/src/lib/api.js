@@ -100,7 +100,8 @@ export const ordersAPI = {
   createOrder: (orderData) => api.post("/api/orders", orderData),
   getOrders: (params) => api.get("/api/orders", { params }),
   getOrderById: (orderId) => api.get(`/api/orders/${orderId}`),
-  cancelOrder: (id) => api.post(`/api/orders/${id}/cancel`),
+  cancelOrder: (id, reason = "change my mind") =>
+    api.post(`/api/orders/${id}/cancel`, { reason }),
   updateOrderStatus: (orderId, status) =>
     api.patch(`/api/orders/${orderId}/status`, { status }),
   getHawkerOrders: (params) => api.get("/api/hawker/orders", { params }),

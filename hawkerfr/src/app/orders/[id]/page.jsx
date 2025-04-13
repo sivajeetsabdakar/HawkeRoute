@@ -32,6 +32,8 @@ export default function OrderDetailPage() {
   const [error, setError] = useState("");
   const [hawkerLocation, setHawkerLocation] = useState(null);
   const [cancelLoading, setCancelLoading] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
 
   useEffect(() => {
     const fetchOrderDetails = async () => {
@@ -74,17 +76,23 @@ export default function OrderDetailPage() {
   }, [id, isAuthenticated]);
 
   const handleCancelOrder = async () => {
-    if (
-      !order ||
-      !window.confirm("Are you sure you want to cancel this order?")
-    ) {
+    if (!order) return;
+
+    // Show the cancel modal to get the reason
+    setShowCancelModal(true);
+  };
+
+  const confirmCancelOrder = async () => {
+    if (!cancelReason.trim()) {
+      alert("Please provide a reason for cancellation");
       return;
     }
 
     try {
       setCancelLoading(true);
-      const response = await ordersAPI.cancelOrder(order.id);
+      const response = await ordersAPI.cancelOrder(order.id, cancelReason);
       setOrder((prev) => ({ ...prev, status: "cancelled" }));
+      setShowCancelModal(false);
       alert("Order has been cancelled successfully");
     } catch (err) {
       console.error("Error cancelling order:", err);
@@ -392,6 +400,41 @@ export default function OrderDetailPage() {
           </Card>
         </div>
       </div>
+
+      {/* Cancel Order Modal */}
+      {showCancelModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full">
+            <h2 className="text-xl font-bold mb-4">Cancel Order</h2>
+            <p className="text-gray-600 mb-4">
+              Please let us know why you want to cancel this order:
+            </p>
+
+            <textarea
+              className="w-full border border-gray-300 rounded-md p-3 mb-4 h-24"
+              placeholder="Enter your reason for cancellation..."
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+            ></textarea>
+
+            <div className="flex justify-end space-x-2">
+              <button
+                className="px-4 py-2 border border-gray-300 rounded-md"
+                onClick={() => setShowCancelModal(false)}
+              >
+                Back
+              </button>
+              <button
+                className="px-4 py-2 bg-red-600 text-white rounded-md disabled:bg-red-300"
+                onClick={confirmCancelOrder}
+                disabled={cancelLoading || !cancelReason.trim()}
+              >
+                {cancelLoading ? "Processing..." : "Confirm Cancellation"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

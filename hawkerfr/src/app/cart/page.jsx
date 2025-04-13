@@ -90,7 +90,7 @@ export default function CartPage() {
       clearCart();
 
       // Redirect to payment page
-      router.push(`/`);
+      router.push(`/orders`);
       alert("Order created successfully");
     } catch (err) {
       console.error("Error creating order:", err);
