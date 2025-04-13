@@ -10,6 +10,18 @@ const ProductCard = ({ product, onAddToCart }) => {
   // Fallback image if product image is not available
   const imageSrc = image_url || "/images/placeholder-food.jpg";
 
+  // Handle adding to cart with simplified product object
+  const handleAddToCart = () => {
+    if (onAddToCart) {
+      const simplifiedProduct = {
+        id,
+        name,
+        price,
+      };
+      onAddToCart(simplifiedProduct);
+    }
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:shadow-lg hover:-translate-y-1">
       <div className="relative h-48">
@@ -47,7 +59,7 @@ const ProductCard = ({ product, onAddToCart }) => {
             <Button
               size="sm"
               disabled={!is_available}
-              onClick={() => onAddToCart && onAddToCart(product)}
+              onClick={handleAddToCart}
             >
               Add to Cart
             </Button>

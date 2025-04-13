@@ -1,28 +1,55 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/contexts/CartContext";
 import Button from "@/components/ui/Button";
 import { formatCurrency } from "@/lib/utils";
-import { FiShoppingCart, FiMenu, FiX, FiUser } from "react-icons/fi";
+import {
+  FiShoppingCart,
+  FiMenu,
+  FiX,
+  FiUser,
+  FiChevronDown,
+} from "react-icons/fi";
 
 const Navbar = () => {
   const pathname = usePathname();
   const { user, logout, isAuthenticated, isCustomer, isHawker } = useAuth();
   const { getTotalQuantity, getTotalAmount } = useCart();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
+  const toggleDropdown = () => {
+    setDropdownOpen(!dropdownOpen);
+  };
+
   const handleLogout = async () => {
     await logout();
     setIsMenuOpen(false);
+    setDropdownOpen(false);
   };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const customerLinks = [
     { href: "/", label: "Home" },
@@ -81,25 +108,32 @@ const Navbar = () => {
                     <span>({formatCurrency(getTotalAmount())})</span>
                   </Link>
                 )}
-                <div className="relative group">
-                  <button className="flex items-center text-gray-600 hover:text-orange-600">
+                <div className="relative" ref={dropdownRef}>
+                  <button
+                    className="flex items-center text-gray-600 hover:text-orange-600"
+                    onClick={toggleDropdown}
+                  >
                     <FiUser className="mr-1" />
                     <span>{user?.name || "Account"}</span>
+                    <FiChevronDown className="ml-1" />
                   </button>
-                  <div className="absolute right-0 w-48 py-2 mt-2 bg-white rounded-md shadow-xl z-20 hidden group-hover:block">
-                    <Link
-                      href="/profile"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50"
-                    >
-                      Profile
-                    </Link>
-                    <button
-                      onClick={handleLogout}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-orange-50"
-                    >
-                      Logout
-                    </button>
-                  </div>
+                  {dropdownOpen && (
+                    <div className="absolute right-0 w-48 py-2 mt-2 bg-white rounded-md shadow-xl z-50">
+                      <Link
+                        href="/profile"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50"
+                        onClick={() => setDropdownOpen(false)}
+                      >
+                        Profile
+                      </Link>
+                      <button
+                        onClick={handleLogout}
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-orange-50"
+                      >
+                        Logout
+                      </button>
+                    </div>
+                  )}
                 </div>
               </>
             ) : (

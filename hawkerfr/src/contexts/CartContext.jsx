@@ -5,7 +5,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 const CartContext = createContext(null);
 
 export const CartProvider = ({ children }) => {
-  const [cart, setCart] = useState({ items: [], hawker_id: null });
+  const [cart, setCart] = useState({ items: [] });
   const [loading, setLoading] = useState(true);
 
   // Load cart from localStorage on component mount
@@ -31,20 +31,6 @@ export const CartProvider = ({ children }) => {
   // Add item to cart
   const addToCart = (product, quantity = 1) => {
     setCart((prevCart) => {
-      // If the cart is empty or from a different hawker, start a new cart
-      if (
-        prevCart.hawker_id !== null &&
-        prevCart.hawker_id !== product.hawker_id
-      ) {
-        if (
-          !window.confirm(
-            "This will clear your current cart as you can only order from one hawker at a time. Continue?"
-          )
-        ) {
-          return prevCart;
-        }
-      }
-
       // Check if the item is already in the cart
       const existingItemIndex = prevCart.items.findIndex(
         (item) => item.product_id === product.id
@@ -65,17 +51,16 @@ export const CartProvider = ({ children }) => {
       } else {
         // Add new item if it doesn't exist
         return {
+          ...prevCart,
           items: [
             ...prevCart.items,
             {
               product_id: product.id,
               name: product.name,
               price: product.price,
-              image_url: product.image_url,
               quantity,
             },
           ],
-          hawker_id: product.hawker_id,
         };
       }
     });
@@ -112,7 +97,7 @@ export const CartProvider = ({ children }) => {
 
   // Clear cart
   const clearCart = () => {
-    setCart({ items: [], hawker_id: null });
+    setCart({ items: [] });
   };
 
   // Calculate total amount
@@ -138,7 +123,6 @@ export const CartProvider = ({ children }) => {
     getTotalAmount,
     getTotalQuantity,
     isEmpty: cart.items.length === 0,
-    hawkerId: cart.hawker_id,
   };
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

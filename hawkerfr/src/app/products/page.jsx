@@ -70,7 +70,14 @@ export default function ProductsPage() {
     );
 
   const handleAddToCart = (product) => {
-    addToCart(product);
+    // Create a simplified product object with only the necessary information
+    const simplifiedProduct = {
+      id: product.id,
+      name: product.name,
+      price: product.price,
+    };
+
+    addToCart(simplifiedProduct);
   };
 
   if (loading) {
@@ -174,10 +181,6 @@ export default function ProductsPage() {
               <p className="text-gray-600 mt-2 line-clamp-2">
                 {product.description}
               </p>
-
-              <div className="text-sm text-gray-500 mt-1">
-                Hawker: {product.hawker_name}
-              </div>
 
               <div className="flex justify-between items-center mt-4">
                 {product.category && (
