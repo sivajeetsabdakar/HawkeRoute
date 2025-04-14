@@ -8,7 +8,11 @@ import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import { FiSearch, FiMapPin, FiStar, FiMap, FiList } from "react-icons/fi";
 import { locationAPI } from "@/lib/api";
-import { getCurrentPosition, watchPosition, calculateDistance } from "@/lib/location";
+import {
+  getCurrentPosition,
+  watchPosition,
+  calculateDistance,
+} from "@/lib/location";
 
 export default function HawkersPage() {
   const router = useRouter();
@@ -30,13 +34,17 @@ export default function HawkersPage() {
         const response = await locationAPI.getNearbyHawkers({
           latitude: userLocation.latitude,
           longitude: userLocation.longitude,
-          radius: radius * 1000 // Convert km to meters as the API expects meters
+          radius: radius * 1000, // Convert km to meters as the API expects meters
         });
-        
+
         console.log("API response:", response);
-        
+
         // Handle the specific response format
-        if (response.data && response.data.status === "success" && Array.isArray(response.data.data)) {
+        if (
+          response.data &&
+          response.data.status === "success" &&
+          Array.isArray(response.data.data)
+        ) {
           setHawkers(response.data.data);
         } else if (Array.isArray(response.data)) {
           setHawkers(response.data);
@@ -86,14 +94,22 @@ export default function HawkersPage() {
 
   // Ensure hawkers is an array before filtering
   const hawkersArray = Array.isArray(hawkers) ? hawkers : [];
-  
+
   // Filter hawkers based on search term
   const filteredHawkers = hawkersArray.filter(
     (hawker) =>
-      (hawker.business_name && hawker.business_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (hawker.business_address && hawker.business_address.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (hawker.specialty && hawker.specialty.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (hawker.name && hawker.name.toLowerCase().includes(searchTerm.toLowerCase()))
+      (hawker.business_name &&
+        hawker.business_name
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase())) ||
+      (hawker.business_address &&
+        hawker.business_address
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase())) ||
+      (hawker.specialty &&
+        hawker.specialty.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (hawker.name &&
+        hawker.name.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   // Hawkers come pre-sorted by distance from the API, but we can sort again if needed
@@ -122,13 +138,6 @@ export default function HawkersPage() {
               <FiList className="mr-2" />
               List
             </Button>
-            <Button
-              variant={viewMode === "map" ? "primary" : "ghost"}
-              onClick={() => setViewMode("map")}
-            >
-              <FiMap className="mr-2" />
-              Map
-            </Button>
           </div>
         </div>
       </div>
@@ -145,12 +154,6 @@ export default function HawkersPage() {
           <option value={5}>5 km</option>
           <option value={10}>10 km</option>
         </select>
-        <Button
-          variant="ghost"
-          onClick={() => setIsWatchingLocation(!isWatchingLocation)}
-        >
-          {isWatchingLocation ? "Stop Tracking" : "Track Location"}
-        </Button>
       </div>
 
       {error && (
@@ -187,7 +190,7 @@ export default function HawkersPage() {
           ) : (
             <>
               {sortedHawkers.length === 0 ? (
-                <div className="text-center py-12">                                                                                                                                                                         
+                <div className="text-center py-12">
                   <p className="text-gray-600 text-lg">
                     No hawkers found within {radius}km of your location.
                   </p>
@@ -216,15 +219,22 @@ export default function HawkersPage() {
                       </div>
                       <div className="flex-grow p-4">
                         <h2 className="text-xl font-semibold mb-2">
-                          {hawker.business_name || hawker.name || "Unnamed Hawker"}
+                          {hawker.business_name ||
+                            hawker.name ||
+                            "Unnamed Hawker"}
                         </h2>
                         <div className="flex items-center text-gray-600 mb-2">
                           <FiMapPin className="mr-1" size={16} />
-                          <span className="text-sm">{hawker.business_address || "Address not available"}</span>
+                          <span className="text-sm">
+                            {hawker.business_address || "Address not available"}
+                          </span>
                         </div>
                         {(hawker.rating || hawker.total_ratings) && (
                           <div className="flex items-center text-gray-600 mb-4">
-                            <FiStar className="mr-1 text-yellow-500" size={16} />
+                            <FiStar
+                              className="mr-1 text-yellow-500"
+                              size={16}
+                            />
                             <span>{hawker.rating || "N/A"}</span>
                             {hawker.total_ratings && (
                               <span className="text-sm text-gray-500 ml-1">
@@ -233,7 +243,7 @@ export default function HawkersPage() {
                             )}
                           </div>
                         )}
-                        
+
                         {hawker.products_count && (
                           <p className="text-sm text-gray-500 mb-4">
                             Products: {hawker.products_count}
@@ -241,13 +251,15 @@ export default function HawkersPage() {
                         )}
 
                         <p className="text-sm text-gray-500 mb-4">
-                          Distance: {hawker.distance_km ? 
-                            hawker.distance_km.toFixed(1) : 
-                            (hawker.distance_m ? 
-                              (hawker.distance_m / 1000).toFixed(1) : 
-                              (hawker.distance ? 
-                                (hawker.distance / 1000).toFixed(1) : 
-                                "N/A"))} km
+                          Distance:{" "}
+                          {hawker.distance_km
+                            ? hawker.distance_km.toFixed(1)
+                            : hawker.distance_m
+                            ? (hawker.distance_m / 1000).toFixed(1)
+                            : hawker.distance
+                            ? (hawker.distance / 1000).toFixed(1)
+                            : "N/A"}{" "}
+                          km
                         </p>
 
                         <Link

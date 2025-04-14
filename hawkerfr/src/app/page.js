@@ -11,12 +11,11 @@ export default function Home() {
       <section className="relative -mx-4 sm:-mx-6 md:-mx-8 lg:-mx-16 xl:-mx-24 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-black to-transparent z-10"></div>
         <div className="relative w-full h-[500px]">
-        <img
-  src="https://media.istockphoto.com/id/182766047/photo/indian-banana-seller.jpg?s=2048x2048&w=is&k=20&c=0X_jEsRYTcOwfY9TLLVNs6h7dU41z_tJLj4jj_LpnrQ="
-  alt="Hawker"
-  class="w-full h-200 object-cover"
-/>
-
+          <img
+            src="https://media.istockphoto.com/id/182766047/photo/indian-banana-seller.jpg?s=2048x2048&w=is&k=20&c=0X_jEsRYTcOwfY9TLLVNs6h7dU41z_tJLj4jj_LpnrQ="
+            alt="Hawker"
+            class="w-full h-200 object-cover"
+          />
         </div>
         <div className="absolute inset-0 z-20 flex items-center">
           <div className="container mx-auto px-4">
@@ -25,8 +24,8 @@ export default function Home() {
                 Connecting You to Hawkers
               </h1>
               <p className="text-lg md:text-xl text-white mb-8">
-                Order any product or services directly from hawkers and get it delivered to
-                your doorstep.
+                Order any product or services directly from hawkers and get it
+                delivered to your doorstep.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link href="/hawkers">
@@ -34,7 +33,6 @@ export default function Home() {
                     Find Hawkers
                   </Button>
                 </Link>
-                
               </div>
             </div>
           </div>
@@ -51,10 +49,11 @@ export default function Home() {
             <div className="mx-auto w-16 h-16 flex items-center justify-center rounded-full bg-orange-100 text-orange-600 mb-4">
               <FiSearch size={24} />
             </div>
-            <h3 className="text-xl font-semibold mb-3 text-black">Discover Hawkers</h3>
+            <h3 className="text-xl font-semibold mb-3 text-black">
+              Discover Hawkers
+            </h3>
             <p className="text-gray-600">
-              Find hawkers near you with our easy-to-use search
-              feature.
+              Find hawkers near you with our easy-to-use search feature.
             </p>
           </div>
 
@@ -62,7 +61,9 @@ export default function Home() {
             <div className="mx-auto w-16 h-16 flex items-center justify-center rounded-full bg-orange-100 text-orange-600 mb-4">
               <FiMapPin size={24} />
             </div>
-            <h3 className="text-xl font-semibold mb-3 text-black">Order Products or Services</h3>
+            <h3 className="text-xl font-semibold mb-3 text-black">
+              Order Products or Services
+            </h3>
             <p className="text-gray-600">
               Browse menus, select your favorite dishes, and place your order in
               minutes.
@@ -73,20 +74,20 @@ export default function Home() {
             <div className="mx-auto w-16 h-16 flex items-center justify-center rounded-full bg-orange-100 text-orange-600 mb-4">
               <FiTruck size={24} />
             </div>
-            <h3 className="text-xl font-semibold mb-3 text-black ">Get Delivery</h3>
+            <h3 className="text-xl font-semibold mb-3 text-black ">
+              Get Delivery
+            </h3>
             <p className="text-gray-600">
-              Track your order in real-time and enjoy fresh products or services at your
-              doorstep.
+              Track your order in real-time and enjoy fresh products or services
+              at your doorstep.
             </p>
           </div>
         </div>
       </section>
 
       {/* For Hawkers Section */}
-      
 
       {/* Testimonials Section */}
-      
 
       {/* CTA Section */}
       <section className="bg-orange-600 py-16 -mx-4 sm:-mx-6 md:-mx-8 lg:-mx-16 xl:-mx-24">
