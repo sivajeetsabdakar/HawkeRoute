@@ -63,7 +63,7 @@ export default function StaticMap({
   if (!latitude || !longitude) {
     return (
       <div className={`bg-gray-100 rounded flex items-center justify-center p-4 ${className}`}>
-        <p className="text-gray-500 text-sm">Location not available</p>
+        <p className="text-gray-800 text-sm">Location not available</p>
       </div>
     );
   }
@@ -83,7 +83,7 @@ export default function StaticMap({
         </div>
         
         {/* Coordinates display */}
-        <p className="text-sm text-gray-600 mb-2">
+        <p className="text-sm text-gray-800 mb-2 font-medium">
           Location: {parseFloat(latitude).toFixed(6)}, {parseFloat(longitude).toFixed(6)}
         </p>
         
@@ -92,7 +92,7 @@ export default function StaticMap({
           href={`https://www.google.com/maps?q=${latitude},${longitude}`}
           target="_blank" 
           rel="noopener noreferrer"
-          className="text-orange-500 hover:underline text-sm font-medium"
+          className="text-orange-600 hover:underline text-sm font-medium"
         >
           View on Google Maps
         </a>
@@ -111,9 +111,9 @@ export default function StaticMap({
         {/* Location info */}
         {(title || address) && (
           <div className="absolute bottom-0 left-0 right-0 bg-white bg-opacity-90 p-3">
-            <h4 className="font-medium text-sm">{title}</h4>
+            <h4 className="font-medium text-sm text-gray-900">{title}</h4>
             {address && (
-              <p className="text-xs text-gray-600 mt-1 truncate">{address}</p>
+              <p className="text-xs text-gray-800 mt-1 truncate">{address}</p>
             )}
           </div>
         )}
