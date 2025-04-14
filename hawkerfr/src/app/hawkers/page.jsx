@@ -209,26 +209,14 @@ export default function HawkersPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {sortedHawkers.map((hawker) => (
                     <Card key={hawker.id} className="h-full flex flex-col">
-                      <div className="relative h-48">
-                        <Image
-                          src={hawker.image_url || "/images/hawker-default.jpg"}
-                          alt={hawker.business_name || "Hawker"}
-                          fill
-                          className="object-cover"
-                        />
-                      </div>
+                     
                       <div className="flex-grow p-4">
-                        <h2 className="text-xl font-semibold mb-2">
+                        <h2 className="text-xl font-semibold mb-2 text-black">
                           {hawker.business_name ||
                             hawker.name ||
                             "Unnamed Hawker"}
                         </h2>
-                        <div className="flex items-center text-gray-600 mb-2">
-                          <FiMapPin className="mr-1" size={16} />
-                          <span className="text-sm">
-                            {hawker.business_address || "Address not available"}
-                          </span>
-                        </div>
+                        
                         {(hawker.rating || hawker.total_ratings) && (
                           <div className="flex items-center text-gray-600 mb-4">
                             <FiStar

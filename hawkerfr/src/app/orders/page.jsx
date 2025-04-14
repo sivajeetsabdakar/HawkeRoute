@@ -2,27 +2,32 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import {
   FiClock,
   FiCheckCircle,
   FiTruck,
   FiXCircle,
   FiFilter,
+  FiImage,
 } from "react-icons/fi";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import { useAuth } from "@/contexts/AuthContext";
-import { ordersAPI } from "@/lib/api";
+import { ordersAPI, productsAPI } from "@/lib/api";
 import { formatCurrency, formatDate, formatTime } from "@/lib/utils";
+import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
 
 export default function OrdersPage() {
   const { isAuthenticated, user } = useAuth();
   const [orders, setOrders] = useState([]);
+  const [products, setProducts] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const router = useRouter();
 
+  // Fetch orders data
   useEffect(() => {
     const fetchOrders = async () => {
       try {
@@ -33,7 +38,17 @@ export default function OrdersPage() {
 
         setLoading(true);
         const response = await ordersAPI.getOrders();
-        setOrders(response.data);
+        
+        // Handle different API response formats
+        if (response.data && Array.isArray(response.data)) {
+          setOrders(response.data);
+        } else if (response.data && response.data.status === "success" && Array.isArray(response.data.data)) {
+          setOrders(response.data.data);
+        } else {
+          console.error("Unexpected API response format:", response);
+          setOrders([]);
+          setError("Received an unexpected response format from the server.");
+        }
       } catch (err) {
         console.error("Error fetching orders:", err);
         setError("Failed to load orders. Please try again later.");
@@ -44,6 +59,60 @@ export default function OrdersPage() {
 
     fetchOrders();
   }, [isAuthenticated]);
+
+  // Fetch product details for all product IDs in orders
+  useEffect(() => {
+    const fetchProductDetails = async () => {
+      if (orders.length === 0) return;
+      
+      try {
+        // Extract all unique product IDs from orders
+        const productIds = new Set();
+        orders.forEach(order => {
+          order.items.forEach(item => {
+            if (item.product_id) {
+              productIds.add(item.product_id);
+            }
+          });
+        });
+        
+        // Convert Set to Array
+        const uniqueProductIds = Array.from(productIds);
+        
+        if (uniqueProductIds.length === 0) return;
+        
+        console.log("Fetching details for products:", uniqueProductIds);
+        
+        // For each product ID, fetch details
+        const productDetails = {};
+        
+        // We'll fetch products one by one since the batch API may not exist
+        const fetchPromises = uniqueProductIds.map(async (productId) => {
+          try {
+            const response = await productsAPI.getProductById(productId);
+            
+            if (response.data) {
+              productDetails[productId] = response.data;
+            }
+          } catch (err) {
+            console.error(`Error fetching product ${productId}:`, err);
+            // Still continue with other products
+          }
+        });
+        
+        // Wait for all fetch operations to complete
+        await Promise.all(fetchPromises);
+        
+        console.log("Fetched product details:", productDetails);
+        setProducts(productDetails);
+        
+      } catch (err) {
+        console.error("Error fetching product details:", err);
+      }
+    };
+    
+    fetchProductDetails();
+  }, [orders]);
 
   if (!isAuthenticated) {
     return (
@@ -89,6 +158,8 @@ export default function OrdersPage() {
   const sortedOrders = [...filteredOrders].sort(
     (a, b) => new Date(b.created_at) - new Date(a.created_at)
   );
+  
+  console.log("Sorted orders:", sortedOrders);
 
   const getStatusIcon = (status) => {
     switch (status) {
@@ -98,6 +169,7 @@ export default function OrdersPage() {
       case "preparing":
         return <FiClock className="text-blue-500" />;
       case "delivering":
+      case "assigned":
         return <FiTruck className="text-blue-500" />;
       case "delivered":
         return <FiCheckCircle className="text-green-500" />;
@@ -118,6 +190,8 @@ export default function OrdersPage() {
         return "Preparing";
       case "delivering":
         return "Out for Delivery";
+      case "assigned":
+        return "Assigned to Hawker";
       case "delivered":
         return "Delivered";
       case "cancelled":
@@ -135,6 +209,7 @@ export default function OrdersPage() {
       case "preparing":
         return "bg-blue-100 text-blue-800";
       case "delivering":
+      case "assigned":
         return "bg-indigo-100 text-indigo-800";
       case "delivered":
         return "bg-green-100 text-green-800";
@@ -144,6 +219,16 @@ export default function OrdersPage() {
         return "bg-gray-100 text-gray-800";
     }
   };
+  
+  // Get product details including image URL
+  const getProductDetails = (productId) => {
+    if (products[productId]) {
+      return products[productId];
+    }
+    return null;
+  };
+  
+
 
   return (
     <div className="space-y-6">
@@ -221,41 +306,80 @@ export default function OrdersPage() {
               </div>
 
               <div className="mb-4">
-                <h3 className="font-medium mb-2">Order Items:</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {order.items.map((item) => (
-                    <div key={item.id} className="flex items-center">
-                      <div className="relative w-12 h-12 mr-3 rounded overflow-hidden">
-                        <Image
-                          src={item.image_url || "/images/product-default.jpg"}
-                          alt={item.name || `Product ${item.product_id}`}
-                          fill
-                          className="object-cover"
-                        />
+                <h3 className="font-medium mb-2 text-black">Order Items:</h3>
+                <div className="grid grid-cols-1 gap-4">
+                  {order.items.map((item) => {
+                    const productDetails = getProductDetails(item.product_id);
+                    const imageUrl = productDetails?.image_url;
+                    
+                    return (
+                      <div key={item.id} className="flex items-center border-b border-gray-100 pb-2">
+                        <div className="w-12 h-12 mr-3 rounded overflow-hidden bg-gray-100 flex items-center justify-center">
+                          {imageUrl ? (
+                            <div 
+                              className="w-full h-full bg-cover bg-center"
+                              style={{
+                                backgroundImage: `url(${imageUrl})`,
+                                backgroundSize: 'contain',
+                                backgroundPosition: 'center',
+                                backgroundRepeat: 'no-repeat'
+                              }}
+                            />
+                          ) : (
+                            <FiImage className="text-gray-400" size={24} />
+                          )}
+                        </div>
+                        <div className="flex-grow">
+                          <p className="font-medium text-gray-900">
+                            {item.product_name || productDetails?.name || `Product ${item.product_id}`}
+                          </p>
+                          <div className="flex justify-between">
+                            <p className="text-sm text-gray-600">
+                              {formatCurrency(item.price)} x {item.quantity}
+                            </p>
+                            <p className="text-sm font-medium text-black">
+                              {formatCurrency(item.price * item.quantity)}
+                            </p>
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex-grow">
-                        <p className="font-medium text-gray-900 text-sm">
-                          {item.name || `Product ${item.product_id}`}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          {formatCurrency(item.price)} x {item.quantity}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
+              
+              <div className="border-t border-gray-200 pt-4">
+                <div className="flex flex-col sm:flex-row justify-between">
+                  <div>
+                    <h3 className="font-medium mb-1 text-black">Delivery Address:</h3>
+                    <p className="text-gray-600 text-sm mb-2">{order.delivery_address}</p>
+                    {order.hawker_name && (
+                      <div className="text-sm text-gray-600">
+                        <span className="font-medium">Hawker:</span> {order.hawker_name}
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="flex mt-4 sm:mt-0 gap-2">
+                    {(order.status === "pending" || order.status === "confirmed") && (
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        className="text-red-600 border-red-600 hover:bg-red-50"
+                        onClick={() => cancelOrder(order.id)}
+                      >
+                        Cancel Order
+                      </Button>
+                    )}
+                    
+                    <Link href={`/orders/${order.id}`}>
+                      <Button size="sm" variant="outline">
+                        View Details
+                      </Button>
+                    </Link>
 
-              <div className="flex justify-between items-center">
-                <div>
-                  <p className="text-sm text-gray-600">Delivery to:</p>
-                  <p className="text-gray-900">{order.delivery_address}</p>
+                  </div>
                 </div>
-                <Link href={`/orders/${order.id}`}>
-                  <Button variant="outline" size="sm">
-                    View Details
-                  </Button>
-                </Link>
               </div>
             </Card>
           ))}

@@ -13,28 +13,31 @@ import {
   FiMapPin,
   FiPhone,
   FiShoppingBag,
+  FiImage,
+  FiNavigation,
 } from "react-icons/fi";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import { useAuth } from "@/contexts/AuthContext";
-import { ordersAPI, deliveryAPI } from "@/lib/api";
+import { ordersAPI, productsAPI, deliveryAPI } from "@/lib/api";
 import { formatCurrency, formatDate, formatTime } from "@/lib/utils";
+import toast from "react-hot-toast";
+import StaticMap from "@/components/maps/StaticMap";
 
-export default function OrderDetailPage() {
-  const { id } = useParams();
-  const router = useRouter();
+export default function OrderDetailsPage() {
   const { isAuthenticated } = useAuth();
+  const router = useRouter();
+  const params = useParams();
+  const orderId = params.id;
 
   const [order, setOrder] = useState(null);
-  const [hawker, setHawker] = useState(null);
-  const [tracking, setTracking] = useState(null);
+  const [products, setProducts] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [hawkerLocation, setHawkerLocation] = useState(null);
-  const [cancelLoading, setCancelLoading] = useState(false);
-  const [showCancelModal, setShowCancelModal] = useState(false);
-  const [cancelReason, setCancelReason] = useState("");
+  const [refreshInterval, setRefreshInterval] = useState(null);
 
+  // Fetch order data
   useEffect(() => {
     const fetchOrderDetails = async () => {
       try {
@@ -44,28 +47,17 @@ export default function OrderDetailPage() {
         }
 
         setLoading(true);
-        const response = await ordersAPI.getOrderById(id);
-        setOrder(response.data);
-
-        // If order is in delivery state, get tracking info
-        if (response.data.status === "delivering") {
-          try {
-            const trackingResponse = await deliveryAPI.trackHawker(
-              response.data.hawker_id
-            );
-            setTracking(trackingResponse.data);
-            setHawker(trackingResponse.data.hawker);
-
-            // Set initial hawker location from tracking data
-            if (trackingResponse.data.location) {
-              setHawkerLocation(trackingResponse.data.location);
-            }
-          } catch (trackingErr) {
-            console.error("Error fetching tracking info:", trackingErr);
-          }
+        const response = await ordersAPI.getOrderById(orderId);
+        
+        if (response.data && response.data.status === "success") {
+          setOrder(response.data.data);
+        } else if (response.data) {
+          setOrder(response.data);
+        } else {
+          setError("Failed to load order details. Unexpected response format.");
         }
       } catch (err) {
-        console.error("Error fetching order:", err);
+        console.error("Error fetching order details:", err);
         setError("Failed to load order details. Please try again later.");
       } finally {
         setLoading(false);
@@ -73,66 +65,143 @@ export default function OrderDetailPage() {
     };
 
     fetchOrderDetails();
-  }, [id, isAuthenticated]);
+  }, [isAuthenticated, orderId]);
 
-  const handleCancelOrder = async () => {
+  // Fetch product details
+  useEffect(() => {
+    const fetchProductDetails = async () => {
+      if (!order || !order.items || order.items.length === 0) return;
+      
+      try {
+        // Extract all unique product IDs from order
+        const productIds = new Set();
+        order.items.forEach(item => {
+          if (item.product_id) {
+            productIds.add(item.product_id);
+          }
+        });
+        
+        const uniqueProductIds = Array.from(productIds);
+        
+        if (uniqueProductIds.length === 0) return;
+        
+        // For each product ID, fetch details
+        const productDetails = {};
+        
+        const fetchPromises = uniqueProductIds.map(async (productId) => {
+          try {
+            const response = await productsAPI.getProductById(productId);
+            
+            if (response.data) {
+              productDetails[productId] = response.data;
+            }
+          } catch (err) {
+            console.error(`Error fetching product ${productId}:`, err);
+          }
+        });
+        
+        await Promise.all(fetchPromises);
+        setProducts(productDetails);
+        
+      } catch (err) {
+        console.error("Error fetching product details:", err);
+      }
+    };
+    
+    fetchProductDetails();
+  }, [order]);
+
+  // Track hawker location if order is in "delivering" or "assigned" status
+  useEffect(() => {
+    // Clear any existing interval when component unmounts or order changes
+    return () => {
+      if (refreshInterval) {
+        clearInterval(refreshInterval);
+      }
+    };
+  }, [refreshInterval]);
+
+  // Set up tracking interval when order is loaded
+  useEffect(() => {
     if (!order) return;
-
-    // Show the cancel modal to get the reason
-    setShowCancelModal(true);
-  };
-
-  const confirmCancelOrder = async () => {
-    if (!cancelReason.trim()) {
-      alert("Please provide a reason for cancellation");
-      return;
+    
+    // Check if order is in a trackable state
+    const isTrackable = order.status === "delivering" || order.status === "assigned";
+    
+    if (isTrackable && order.hawker_id) {
+      // Start tracking hawker location
+      const trackHawker = async () => {
+        try {
+          const response = await deliveryAPI.trackHawker(order.hawker_id);
+          
+          if (response.data && response.data.status === "success") {
+            setHawkerLocation(response.data.data);
+          } else if (response.data && response.data.latitude && response.data.longitude) {
+            setHawkerLocation(response.data);
+          } else {
+            console.log("No location data available for this hawker");
+          }
+        } catch (err) {
+          console.error("Error tracking hawker:", err);
+        }
+      };
+      
+      // Track immediately and then set interval
+      trackHawker();
+      
+      // Set up 30-second refresh interval for tracking
+      const interval = setInterval(trackHawker, 30000);
+      setRefreshInterval(interval);
+      
+      return () => clearInterval(interval);
+    } else {
+      // Clear interval if order is not trackable
+      if (refreshInterval) {
+        clearInterval(refreshInterval);
+        setRefreshInterval(null);
+      }
     }
-
-    try {
-      setCancelLoading(true);
-      const response = await ordersAPI.cancelOrder(order.id, cancelReason);
-      setOrder((prev) => ({ ...prev, status: "cancelled" }));
-      setShowCancelModal(false);
-      alert("Order has been cancelled successfully");
-    } catch (err) {
-      console.error("Error cancelling order:", err);
-      alert("Failed to cancel order. Please try again later.");
-    } finally {
-      setCancelLoading(false);
-    }
-  };
+  }, [order, refreshInterval]);
 
   if (!isAuthenticated) {
-    return (
-      <div className="text-center py-12">
-        <h1 className="text-2xl font-bold mb-4">
-          You need to login to view order details
-        </h1>
-        <Link href={`/login?redirect=/orders/${id}`}>
-          <Button>Login</Button>
-        </Link>
-      </div>
-    );
+    router.push("/login?redirect=/orders");
+    return null;
   }
 
   if (loading) {
     return (
-      <div className="space-y-6 animate-pulse">
-        <div className="h-8 bg-gray-200 rounded w-1/4"></div>
-        <div className="h-64 bg-gray-200 rounded-lg"></div>
-        <div className="h-64 bg-gray-200 rounded-lg"></div>
+      <div className="space-y-6">
+        <div className="h-8 bg-gray-200 rounded w-1/4 animate-pulse"></div>
+        <div className="h-48 bg-gray-200 rounded-lg animate-pulse"></div>
+        <div className="h-64 bg-gray-200 rounded-lg animate-pulse"></div>
       </div>
     );
   }
 
-  if (error || !order) {
+  if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded">
-        {error || "Order not found"}
-        <div className="mt-4">
-          <Link href="/orders">
-            <Button>Back to Orders</Button>
-          </Link>
+      <div className="space-y-4">
+        <Link href="/orders" className="flex items-center text-gray-600 hover:text-gray-900">
+          <FiArrowLeft className="mr-2" /> Back to Orders
+        </Link>
+        <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded">
+          {error}
+        </div>
+      </div>
+    );
+  }
+
+  if (!order) {
+    return (
+      <div className="space-y-4">
+        <Link href="/orders" className="flex items-center text-gray-600 hover:text-gray-900">
+          <FiArrowLeft className="mr-2" /> Back to Orders
+        </Link>
+        <div className="text-center py-12">
+          <h2 className="text-xl font-semibold mb-2">Order not found</h2>
+          <p className="text-gray-600 mb-4">
+            The order you're looking for doesn't exist or you don't have permission to view it.
+          </p>
         </div>
       </div>
     );
@@ -141,18 +210,19 @@ export default function OrderDetailPage() {
   const getStatusIcon = (status) => {
     switch (status) {
       case "pending":
-        return <FiClock size={24} className="text-orange-500" />;
+        return <FiClock className="text-orange-500" />;
       case "confirmed":
       case "preparing":
-        return <FiClock size={24} className="text-blue-500" />;
+        return <FiClock className="text-blue-500" />;
       case "delivering":
-        return <FiTruck size={24} className="text-blue-500" />;
+      case "assigned":
+        return <FiTruck className="text-blue-500" />;
       case "delivered":
-        return <FiCheckCircle size={24} className="text-green-500" />;
+        return <FiCheckCircle className="text-green-500" />;
       case "cancelled":
-        return <FiXCircle size={24} className="text-red-500" />;
+        return <FiXCircle className="text-red-500" />;
       default:
-        return <FiClock size={24} className="text-gray-500" />;
+        return <FiClock className="text-gray-500" />;
     }
   };
 
@@ -166,6 +236,8 @@ export default function OrderDetailPage() {
         return "Preparing";
       case "delivering":
         return "Out for Delivery";
+      case "assigned":
+        return "Assigned to Hawker";
       case "delivered":
         return "Delivered";
       case "cancelled":
@@ -183,6 +255,7 @@ export default function OrderDetailPage() {
       case "preparing":
         return "bg-blue-100 text-blue-800";
       case "delivering":
+      case "assigned":
         return "bg-indigo-100 text-indigo-800";
       case "delivered":
         return "bg-green-100 text-green-800";
@@ -192,249 +265,235 @@ export default function OrderDetailPage() {
         return "bg-gray-100 text-gray-800";
     }
   };
+  
+  // Get product details including image URL
+  const getProductDetails = (productId) => {
+    if (products[productId]) {
+      return products[productId];
+    }
+    return null;
+  };
+  
+  // Calculate order subtotal
+  const subtotal = order.items.reduce((sum, item) => {
+    return sum + (item.price * item.quantity);
+  }, 0);
+  
+  const cancelOrder = async () => {
+    try {
+      await ordersAPI.cancelOrder(order.id);
+      toast.success("Order cancelled successfully", {
+        icon: '🚫'
+      });
+      // Update the order status locally
+      setOrder({
+        ...order,
+        status: "cancelled"
+      });
+    } catch (err) {
+      console.error("Error cancelling order:", err);
+      toast.error("Failed to cancel order. Please try again.");
+    }
+  };
 
+  const isOrderTrackable = (order.status === "delivering" || order.status === "assigned") && !!hawkerLocation;
+  
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="flex items-center mb-8">
-        <button
-          onClick={() => router.back()}
-          className="mr-4 text-gray-600 hover:text-gray-900 flex items-center"
-        >
-          <FiArrowLeft className="mr-1" />
-          <span>Back</span>
-        </button>
-        <h1 className="text-3xl font-bold">Order Details</h1>
+    <div className="space-y-6">
+      <Link href="/orders" className="flex items-center text-gray-600 hover:text-gray-900">
+        <FiArrowLeft className="mr-2" /> Back to Orders
+      </Link>
+      
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+        <h1 className="text-2xl font-bold">Order #{order.id}</h1>
+        <div className="flex items-center mt-2 sm:mt-0">
+          <div className="mr-3">{getStatusIcon(order.status)}</div>
+          <span
+            className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${getStatusClass(
+              order.status
+            )}`}
+          >
+            {getStatusText(order.status)}
+          </span>
+        </div>
       </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div className="md:col-span-2 space-y-6">
-          {/* Order Status */}
-          <Card>
-            <div className="flex items-center mb-6">
-              {getStatusIcon(order.status)}
-              <div className="ml-4">
-                <h2 className="text-xl font-semibold">
-                  {getStatusText(order.status)}
-                </h2>
-                <p className="text-gray-600">
-                  Order #{order.id} • {formatDate(order.created_at)} at{" "}
-                  {formatTime(order.created_at)}
-                </p>
-              </div>
-              <span
-                className={`ml-auto px-3 py-1 rounded-full text-xs font-medium ${getStatusClass(
-                  order.status
-                )}`}
-              >
-                {getStatusText(order.status)}
-              </span>
-            </div>
-
-            {/* Delivery Tracking (only for delivering orders) */}
-            {order.status === "delivering" && tracking && (
-              <div className="border-t border-gray-200 pt-4">
-                <h3 className="font-semibold mb-3">Delivery Tracking</h3>
-                <div className="bg-blue-50 rounded-lg p-4">
-                  <div className="flex items-center mb-2">
-                    <FiTruck className="text-blue-600 mr-2" />
-                    <span className="font-medium">
-                      Your order is on the way!
-                    </span>
-                  </div>
-                  <p className="text-sm text-gray-600 mb-2">
-                    Estimated delivery time: 15-25 minutes
-                  </p>
-                  <div className="flex items-center text-sm text-gray-600">
-                    <FiMapPin className="mr-1" />
-                    <span>
-                      Last updated:{" "}
-                      {hawkerLocation
-                        ? formatTime(hawkerLocation.timestamp)
-                        : "No updates yet"}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            )}
-          </Card>
-
-          {/* Order Items */}
-          <Card title="Order Items">
-            <div className="space-y-4">
-              {order.items.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex items-center border-b border-gray-200 pb-4 last:border-0"
-                >
-                  <div className="relative w-16 h-16 mr-4 rounded-md overflow-hidden">
-                    <Image
-                      src={item.image_url || "/images/product-default.jpg"}
-                      alt={item.name || `Product ${item.product_id}`}
-                      fill
-                      className="object-cover"
-                    />
+      
+      <Card>
+        <div className="flex flex-col sm:flex-row justify-between border-b border-gray-200 pb-4 mb-4">
+          <div>
+            <h3 className="font-medium text-gray-700">Order Details</h3>
+            <p className="text-sm text-gray-500 mt-1">
+              Placed on {formatDate(order.created_at)} at {formatTime(order.created_at)}
+            </p>
+          </div>
+          <div className="mt-2 sm:mt-0 text-right">
+            <p className="font-bold text-orange-600">
+              {formatCurrency(order.total_amount)}
+            </p>
+            <p className="text-sm text-gray-600">
+              {order.payment_status === "paid" ? "Paid" : "Payment Pending"}
+            </p>
+          </div>
+        </div>
+        
+        <div className="mb-6">
+          <h3 className="font-medium mb-3 text-black">Items:</h3>
+          <div className="space-y-3">
+            {order.items.map((item) => {
+              const productDetails = getProductDetails(item.product_id);
+              const imageUrl = productDetails?.image_url;
+              
+              return (
+                <div key={item.id} className="flex items-center border-b border-gray-100 pb-3">
+                  <div className="w-16 h-16 mr-4 rounded overflow-hidden bg-gray-100 flex items-center justify-center">
+                    {imageUrl ? (
+                      <div 
+                        className="w-full h-full bg-cover bg-center"
+                        style={{
+                          backgroundImage: `url(${imageUrl})`,
+                          backgroundSize: 'contain',
+                          backgroundPosition: 'center',
+                          backgroundRepeat: 'no-repeat'
+                        }}
+                      />
+                    ) : (
+                      <FiImage className="text-gray-400" size={24} />
+                    )}
                   </div>
                   <div className="flex-grow">
-                    <h3 className="font-medium text-gray-900">
-                      {item.name || `Product ${item.product_id}`}
-                    </h3>
-                    <p className="text-gray-600 text-sm">
-                      {formatCurrency(item.price)} x {item.quantity}
+                    <p className="font-medium text-gray-900">
+                      {item.product_name || productDetails?.name || `Product ${item.product_id}`}
                     </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-semibold text-gray-900">
-                      {formatCurrency(item.price * item.quantity)}
-                    </p>
-                  </div>
-                </div>
-              ))}
-
-              <div className="pt-4">
-                <div className="flex justify-between py-2">
-                  <span className="text-gray-600">Subtotal</span>
-                  <span className="font-medium">
-                    {formatCurrency(order.total_amount - 5)}
-                  </span>
-                </div>
-                <div className="flex justify-between py-2">
-                  <span className="text-gray-600">Delivery Fee</span>
-                  <span className="font-medium">{formatCurrency(5)}</span>
-                </div>
-                <div className="flex justify-between py-2 border-t border-gray-200 font-bold">
-                  <span>Total</span>
-                  <span className="text-orange-600">
-                    {formatCurrency(order.total_amount)}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </Card>
-
-          {/* Delivery Information */}
-          <Card title="Delivery Information">
-            <div className="space-y-4">
-              <div className="flex items-start">
-                <FiMapPin className="mt-1 mr-3 text-gray-400" />
-                <div>
-                  <h3 className="font-medium">Delivery Address</h3>
-                  <p className="text-gray-600">{order.delivery_address}</p>
-                </div>
-              </div>
-
-              {order.delivery_instructions && (
-                <div className="flex items-start">
-                  <FiShoppingBag className="mt-1 mr-3 text-gray-400" />
-                  <div>
-                    <h3 className="font-medium">Delivery Instructions</h3>
-                    <p className="text-gray-600">
-                      {order.delivery_instructions}
-                    </p>
+                    <div className="flex justify-between mt-1">
+                      <p className="text-sm text-gray-600">
+                        {formatCurrency(item.price)} x {item.quantity}
+                      </p>
+                      <p className="text-sm font-medium text-black">
+                        {formatCurrency(item.price * item.quantity)}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              )}
+              );
+            })}
+          </div>
+          
+          {/* Price summary */}
+          <div className="mt-4 border-t border-gray-200 pt-4">
+            <div className="flex justify-between mb-1">
+              <p className="text-gray-600">Subtotal</p>
+              <p className="font-medium text-black">{formatCurrency(subtotal)}</p>
             </div>
-          </Card>
-        </div>
-
-        {/* Sidebar */}
-        <div className="space-y-6">
-          {/* Hawker Information */}
-          <Card title="Hawker Information">
-            <div className="space-y-4">
-              <div className="flex items-center">
-                <div className="relative w-12 h-12 mr-3 rounded-full overflow-hidden">
-                  <Image
-                    src="/images/hawker-detail.jpg"
-                    alt="Hawker"
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-                <div>
-                  <h3 className="font-medium">
-                    {hawker?.name || `Hawker ${order.hawker_id}`}
-                  </h3>
-                  <p className="text-sm text-gray-600">
-                    ID: #{order.hawker_id}
-                  </p>
-                </div>
+            <div className="flex justify-between mb-1">
+              <p className="text-gray-600">Delivery Fee</p>
+              <p className="font-medium text-black">{formatCurrency(order.delivery_fee || 0)}</p>
+            </div>
+            {order.discount > 0 && (
+              <div className="flex justify-between mb-1 text-green-600">
+                <p>Discount</p>
+                <p className="font-medium">-{formatCurrency(order.discount)}</p>
               </div>
-
-              <div className="flex items-start">
-                <FiPhone className="mt-1 mr-3 text-gray-400" />
-                <div>
-                  <h3 className="font-medium">Contact</h3>
-                  <p className="text-gray-600">+1234567890</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-4 pt-4 border-t border-gray-200">
-              <Link href={`/hawkers/${order.hawker_id}`}>
-                <Button variant="outline" fullWidth>
-                  Visit Hawker Page
-                </Button>
-              </Link>
-            </div>
-          </Card>
-
-          {/* Actions */}
-          <Card title="Actions">
-            {order.status === "pending" || order.status === "confirmed" ? (
-              <Button
-                variant="outline"
-                className="text-red-600 border-red-600 hover:bg-red-50 w-full mb-2"
-                onClick={handleCancelOrder}
-                disabled={cancelLoading}
-              >
-                {cancelLoading ? "Cancelling..." : "Cancel Order"}
-              </Button>
-            ) : null}
-
-            <Link href={`/orders/${id}/support`}>
-              <Button variant="outline" fullWidth>
-                Contact Support
-              </Button>
-            </Link>
-          </Card>
-        </div>
-      </div>
-
-      {/* Cancel Order Modal */}
-      {showCancelModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full">
-            <h2 className="text-xl font-bold mb-4">Cancel Order</h2>
-            <p className="text-gray-600 mb-4">
-              Please let us know why you want to cancel this order:
-            </p>
-
-            <textarea
-              className="w-full border border-gray-300 rounded-md p-3 mb-4 h-24"
-              placeholder="Enter your reason for cancellation..."
-              value={cancelReason}
-              onChange={(e) => setCancelReason(e.target.value)}
-            ></textarea>
-
-            <div className="flex justify-end space-x-2">
-              <button
-                className="px-4 py-2 border border-gray-300 rounded-md"
-                onClick={() => setShowCancelModal(false)}
-              >
-                Back
-              </button>
-              <button
-                className="px-4 py-2 bg-red-600 text-white rounded-md disabled:bg-red-300"
-                onClick={confirmCancelOrder}
-                disabled={cancelLoading || !cancelReason.trim()}
-              >
-                {cancelLoading ? "Processing..." : "Confirm Cancellation"}
-              </button>
+            )}
+            <div className="flex justify-between font-bold mt-2 pt-2 border-t border-gray-200 text-black">
+              <p>Total</p>
+              <p className="text-orange-600">{formatCurrency(order.total_amount)}</p>
             </div>
           </div>
         </div>
-      )}
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Delivery Information */}
+          <div>
+            <h3 className="font-medium mb-3 text-black">Delivery Information</h3>
+            <div className="bg-gray-50 p-4 rounded">
+              <div className="mb-3">
+                <h4 className="text-sm font-medium text-gray-700">Address:</h4>
+                <p className="text-gray-600">{order.delivery_address}</p>
+              </div>
+       
+              {order.delivery_notes && (
+                <div>
+                  <h4 className="text-sm font-medium text-gray-700">Notes:</h4>
+                  <p className="text-gray-600">{order.delivery_notes}</p>
+                </div>
+              )}
+            </div>
+          </div>
+          
+          {/* Hawker Information */}
+          {/* <div>
+            <h3 className="font-medium mb-3">Hawker Information</h3>
+            <div className="bg-gray-50 p-4 rounded">
+              {order.hawker_name ? (
+                <>
+                  <p className="font-medium">{order.hawker_name}</p>
+                  {order.hawker_phone && (
+                    <p className="text-sm text-gray-600 mb-2">{order.hawker_phone}</p>
+                  )}
+                  {isOrderTrackable && (
+                    <div className="mt-3">
+                      <p className="text-sm text-green-600 mb-2">
+                        <FiTruck className="inline mr-1" /> Your hawker is on the way!
+                      </p>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <p className="text-gray-600">Hawker information not available</p>
+              )}
+            </div>
+          </div> */}
+        </div>
+        
+        {/* Live tracking map */}
+        {isOrderTrackable && (
+          <div className="mt-6">
+            <h3 className="font-medium mb-3">Live Tracking</h3>
+            <div className="bg-gray-50 p-4 rounded">
+              <StaticMap
+                latitude={hawkerLocation.latitude}
+                longitude={hawkerLocation.longitude}
+                title={`${order.hawker_name || 'Hawker'} - Live Location`}
+                className="h-64 w-full mb-3"
+              />
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-gray-600">
+                  <FiMapPin className="inline mr-1" /> Hawker's current location
+                </p>
+                <Link 
+                  href={`https://www.google.com/maps?q=${hawkerLocation.latitude},${hawkerLocation.longitude}`}
+                  target="_blank"
+                  className="text-xs text-orange-500 hover:underline"
+                >
+                  Open in Google Maps
+                </Link>
+              </div>
+              <p className="text-xs text-gray-500 mt-2">
+                Location updates every 30 seconds. Last updated: {formatTime(new Date())}
+              </p>
+            </div>
+          </div>
+        )}
+        
+        {/* Actions */}
+        <div className="mt-6 flex flex-wrap gap-3 justify-end">
+          {(order.status === "pending" || order.status === "confirmed") && (
+            <Button 
+              variant="outline" 
+              className="text-red-600 border-red-600 hover:bg-red-50"
+              onClick={cancelOrder}
+            >
+              Cancel Order
+            </Button>
+          )}
+          
+          <Link href={`/hawkers/${order.hawker_id}`} passHref>
+            <Button variant="outline">View Hawker</Button>
+          </Link>
+          
+          <Button onClick={() => window.print()}>Print Order</Button>
+        </div>
+      </Card>
     </div>
   );
 }

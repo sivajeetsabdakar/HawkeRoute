@@ -93,6 +93,9 @@ export const productsAPI = {
   updateProduct: (productId, productData) =>
     api.put(`/api/products/${productId}`, productData),
   deleteProduct: (productId) => api.delete(`/api/products/${productId}`),
+  
+  // Get multiple products by IDs
+  getProductsByIds: (productIds) => api.get(`/api/products/batch`, { params: { ids: productIds.join(',') } }),
 };
 
 // Orders API
