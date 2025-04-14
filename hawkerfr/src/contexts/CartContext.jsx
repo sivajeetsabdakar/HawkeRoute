@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
+import toast from "react-hot-toast";
 
 const CartContext = createContext(null);
 
@@ -44,12 +45,19 @@ export const CartProvider = ({ children }) => {
           quantity: updatedItems[existingItemIndex].quantity + quantity,
         };
 
+        // Show toast for item quantity update
+        toast.success(`${product.name} quantity updated in cart!`, {
+          icon: '🔄',
+        });
+        console.log("Updated items:", updatedItems);
+
         return {
           ...prevCart,
           items: updatedItems,
         };
       } else {
         // Add new item if it doesn't exist
+        // Toast is handled in ProductCard component
         return {
           ...prevCart,
           items: [
@@ -59,6 +67,9 @@ export const CartProvider = ({ children }) => {
               name: product.name,
               price: product.price,
               quantity,
+              image_url: product.image_url,
+              hawker_id: product.hawker_id,
+              hawker_name: product.hawker_name,
             },
           ],
         };
@@ -69,14 +80,29 @@ export const CartProvider = ({ children }) => {
   // Update item quantity
   const updateItemQuantity = (productId, quantity) => {
     setCart((prevCart) => {
+      // Find the item first for toast message
+      const item = prevCart.items.find(item => item.product_id === productId);
+      
       if (quantity <= 0) {
         // Remove item if quantity is 0 or negative
+        if (item) {
+          toast.success(`${item.name} removed from cart`, {
+            icon: '🗑️',
+          });
+        }
+        
         return {
           ...prevCart,
           items: prevCart.items.filter((item) => item.product_id !== productId),
         };
       } else {
         // Update quantity
+        if (item) {
+          toast.success(`${item.name} quantity updated`, {
+            icon: '✏️',
+          });
+        }
+        
         return {
           ...prevCart,
           items: prevCart.items.map((item) =>
@@ -89,15 +115,29 @@ export const CartProvider = ({ children }) => {
 
   // Remove item from cart
   const removeFromCart = (productId) => {
-    setCart((prevCart) => ({
-      ...prevCart,
-      items: prevCart.items.filter((item) => item.product_id !== productId),
-    }));
+    setCart((prevCart) => {
+      // Find the item first for toast message
+      const item = prevCart.items.find(item => item.product_id === productId);
+      
+      if (item) {
+        toast.success(`${item.name} removed from cart`, {
+          icon: '🗑️',
+        });
+      }
+      
+      return {
+        ...prevCart,
+        items: prevCart.items.filter((item) => item.product_id !== productId),
+      };
+    });
   };
 
   // Clear cart
   const clearCart = () => {
     setCart({ items: [] });
+    toast.success('Cart cleared', {
+      icon: '🧹',
+    });
   };
 
   // Calculate total amount
@@ -122,6 +162,7 @@ export const CartProvider = ({ children }) => {
     clearCart,
     getTotalAmount,
     getTotalQuantity,
+    cartItems: cart.items,
     isEmpty: cart.items.length === 0,
   };
 

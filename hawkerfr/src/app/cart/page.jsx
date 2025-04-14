@@ -22,6 +22,7 @@ import { getCurrentPosition } from "@/lib/location";
 
 export default function CartPage() {
   const router = useRouter();
+  
   const {
     cart,
     updateItemQuantity,
@@ -30,6 +31,7 @@ export default function CartPage() {
     getTotalAmount,
     isEmpty,
   } = useCart();
+  const imageSrc = cart.items.map((item) => item.image_url);
   const { user, isAuthenticated } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -151,7 +153,7 @@ export default function CartPage() {
                     <div
                       className="w-full h-full bg-cover bg-center"
                       style={{
-                        backgroundImage: `url('/images/product-default.jpg')`,
+                        backgroundImage: `url(${imageSrc})`,
                         backgroundSize: "cover",
                         backgroundPosition: "center",
                       }}
@@ -177,7 +179,7 @@ export default function CartPage() {
                     >
                       <FiMinus size={16} />
                     </button>
-                    <span className="w-8 text-center">{item.quantity}</span>
+                    <span className="w-8 text-center text-black">{item.quantity}</span>
                     <button
                       onClick={() =>
                         handleQuantityChange(item.product_id, item.quantity + 1)
@@ -215,17 +217,17 @@ export default function CartPage() {
           <Card title="Order Summary">
             <div className="space-y-4">
               <div className="flex justify-between">
-                <span className="text-gray-600">Subtotal</span>
-                <span className="font-medium">
+                <span className="text-gray-600 k">Subtotal</span>
+                <span className="font-medium text-black">
                   {formatCurrency(getTotalAmount())}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Delivery Fee</span>
-                <span className="font-medium">{formatCurrency(5)}</span>
+                <span className="font-medium text-black">{formatCurrency(5)}</span>
               </div>
               <div className="border-t border-gray-200 pt-4 flex justify-between">
-                <span className="font-semibold">Total</span>
+                <span className="font-semibold text-black ">Total</span>
                 <span className="font-bold text-orange-600">
                   {formatCurrency(getTotalAmount() + 5)}
                 </span>
@@ -243,7 +245,7 @@ export default function CartPage() {
                 <textarea
                   id="address"
                   rows={3}
-                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500"
+                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 text-black"
                   placeholder="Enter your full delivery address"
                   value={deliveryAddress}
                   onChange={(e) => setDeliveryAddress(e.target.value)}
@@ -261,7 +263,7 @@ export default function CartPage() {
                 <textarea
                   id="instructions"
                   rows={2}
-                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500"
+                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 text-black"
                   placeholder="Any specific instructions for delivery"
                   value={deliveryInstructions}
                   onChange={(e) => setDeliveryInstructions(e.target.value)}

@@ -407,7 +407,7 @@ const MapView = ({ onSelectHawker }) => {
 
       {nearbyHawkers.length > 0 && (
         <div className="mt-4">
-          <h3 className="text-lg font-semibold mb-2">Nearby Hawkers</h3>
+          <h3 className="text-lg font-semibold mb-2 text-black">Nearby Hawkers</h3>
           <div className="space-y-2">
             {nearbyHawkers.map((hawker) => {
               if (!userLocation || !hawker.latitude || !hawker.longitude)
@@ -419,7 +419,7 @@ const MapView = ({ onSelectHawker }) => {
               return (
                 <div
                   key={hawker.id}
-                  className="p-3 bg-white rounded-lg border border-gray-200 shadow-sm hover:bg-blue-50 cursor-pointer"
+                  className="p-3 bg-white rounded-lg border border-gray-200 shadow-sm hover:bg-blue-50 cursor-pointer text-black"
                   onClick={() =>
                     onSelectHawker &&
                     onSelectHawker({
@@ -441,11 +441,7 @@ const MapView = ({ onSelectHawker }) => {
                       <p className="text-sm font-medium">
                         {distance.toFixed(1)} km
                       </p>
-                      {hawker.rating && (
-                        <p className="text-yellow-500">
-                          {"★".repeat(Math.floor(hawker.rating))}
-                        </p>
-                      )}
+                    
                     </div>
                   </div>
                   {hawker.products_count > 0 && (

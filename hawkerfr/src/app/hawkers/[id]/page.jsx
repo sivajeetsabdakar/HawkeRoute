@@ -10,6 +10,7 @@ import Button from "@/components/ui/Button";
 import { productsAPI, hawkerAPI, locationAPI } from "@/lib/api";
 import { useCart } from "@/contexts/CartContext";
 import { getCurrentPosition, calculateDistance } from "@/lib/location";
+import StaticMap from "@/components/maps/StaticMap";
 
 export default function HawkerDetailPage() {
   const params = useParams();
@@ -198,13 +199,8 @@ export default function HawkerDetailPage() {
   return (
     <div className="space-y-8">
       {/* Hawker Banner */}
-      <div className="relative h-64 rounded-lg overflow-hidden">
-        <Image
-          src={hawker.banner_url || hawker.image_url || "/images/hawker-default.jpg"}
-          alt={hawker.business_name || hawker.name}
-          fill
-          className="object-cover"
-        />
+      <div className="relative h-30 rounded-lg overflow-hidden">
+     
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end">
           <div className="p-6 text-white">
             <h1 className="text-3xl font-bold">{hawker.business_name || hawker.name}</h1>
@@ -214,17 +210,7 @@ export default function HawkerDetailPage() {
                 <span>{hawker.business_address}</span>
               </div>
             )}
-            {(hawker.rating || hawker.total_ratings) && (
-              <div className="flex items-center mt-2">
-                <FiStar className="mr-1 text-yellow-400" />
-                <span>{hawker.rating || "N/A"}</span>
-                {hawker.total_ratings && (
-                  <span className="text-gray-300 ml-1">
-                    ({hawker.total_ratings} ratings)
-                  </span>
-                )}
-              </div>
-            )}
+
           </div>
         </div>
       </div>
@@ -239,7 +225,7 @@ export default function HawkerDetailPage() {
             <p className="text-gray-600 mb-6">{hawker.description}</p>
           ) : (
             <p className="text-gray-600 mb-6">
-              This hawker offers delicious food. Visit or order to experience their menu.
+              This hawker offers products and services.
             </p>
           )}
 
@@ -292,36 +278,46 @@ export default function HawkerDetailPage() {
         </div>
 
         <div className="bg-gray-50 p-4 rounded-lg">
-          <h3 className="font-bold text-lg mb-3">Location</h3>
+          <h3 className="font-bold text-lg mb-3 text-black">Location</h3>
           {hawker.latitude && hawker.longitude ? (
-            <div className="aspect-square bg-gray-200 rounded mb-3 flex items-center justify-center">
-              {/* Map placeholder - would be replaced with actual map component */}
-              <p className="text-gray-500 text-sm text-center p-4">
-                Map view coming soon
-              </p>
-            </div>
+            <>
+              <StaticMap 
+                latitude={hawker.latitude} 
+                longitude={hawker.longitude}
+                title={hawker.business_name || "Hawker Location"}
+                className="aspect-square mb-3 text-black"
+              />
+              
+              {hawker.business_address && (
+                <div className="mb-3">
+                  <h4 className="font-medium text-sm text-black">Address:</h4>
+                  <p className="text-gray-600">{hawker.business_address}</p>
+                </div>
+              )}
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <Link href={`https://www.google.com/maps?q=${hawker.latitude},${hawker.longitude}`} target="_blank">
+                  <Button fullWidth variant="outline" className="flex items-center justify-center">
+                    <FiMapPin className="mr-2" /> View on Maps
+                  </Button>
+                </Link>
+                
+                <Link href={`https://www.google.com/maps/dir/?api=1&destination=${hawker.latitude},${hawker.longitude}`} target="_blank">
+                  <Button fullWidth variant="outline" className="flex items-center justify-center">
+                    <FiTruck className="mr-2" /> Get Directions
+                  </Button>
+                </Link>
+              </div>
+            </>
           ) : (
             <p className="text-gray-500 mb-3">Location not available</p>
-          )}
-          
-          {hawker.business_address && (
-            <div className="mb-3">
-              <h4 className="font-medium text-sm">Address:</h4>
-              <p className="text-gray-600">{hawker.business_address}</p>
-            </div>
-          )}
-          
-          {hawker.latitude && hawker.longitude && (
-            <Link href={`https://maps.google.com/?q=${hawker.latitude},${hawker.longitude}`} target="_blank">
-              <Button fullWidth variant="outline">Get Directions</Button>
-            </Link>
           )}
         </div>
       </div>
 
       {/* Menu */}
       <div>
-        <h2 className="text-2xl font-bold mb-4">Menu</h2>
+        <h2 className="text-2xl font-bold mb-4">Products</h2>
         
         {/* Categories */}
         {categories.length > 1 && (

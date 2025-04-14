@@ -214,7 +214,7 @@ const LocationPage = () => {
 
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         <div className="p-4 border-b">
-          <h2 className="text-lg font-semibold">Your Location</h2>
+          <h2 className="text-lg font-semibold text-black">Your Location</h2>
           <p className="text-sm text-gray-600">
             We need your location to show you nearby hawkers. Make sure location
             services are enabled in your browser. Otherwise, we'll show you

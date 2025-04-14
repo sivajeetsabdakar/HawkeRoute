@@ -1,12 +1,18 @@
 import React, { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
 import Button from "@/components/ui/Button";
-import { FiImage } from "react-icons/fi";
+import toast from "react-hot-toast";
 
 const ProductCard = ({ product, onAddToCart }) => {
   const { id, name, description, price, image_url, is_available } = product;
   const [imgError, setImgError] = useState(false);
+
+  // Fallback image
+  const defaultImg = "/images/placeholder.jpg";
+  // Use default image if no image_url or if there was an error loading the image
+  const imageSrc = imgError || !image_url ? defaultImg : image_url;
 
   // Handle adding to cart with simplified product object
   const handleAddToCart = () => {
@@ -17,37 +23,35 @@ const ProductCard = ({ product, onAddToCart }) => {
         price,
       };
       onAddToCart(simplifiedProduct);
+      
+      // Show success toast
+      toast.success(`${name} added to cart!`, {
+        icon: '🛒',
+        position: 'bottom-right',
+      });
     }
   };
 
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:shadow-lg hover:-translate-y-1">
       <div className="relative h-48">
-        {image_url && !imgError ? (
-          // If we have a valid image URL and no error, try to load it
-          <div 
-            className="w-full h-full bg-cover bg-center"
-            style={{ 
-              backgroundImage: `url(${image_url})`,
-              backgroundSize: 'contain',
-              backgroundPosition: 'center',
-              backgroundRepeat: 'no-repeat',
-              backgroundColor: '#f3f4f6' // light gray background
-            }}
-            onError={() => setImgError(true)}
-          />
-        ) : (
-          // Fallback if no image or error loading
-          <div className="w-full h-full flex items-center justify-center bg-gray-100">
-            <FiImage size={48} className="text-gray-400" />
-          </div>
-        )}
-        
-        {!is_available && (
-          <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center">
-            <span className="text-white font-medium text-lg">Out of Stock</span>
-          </div>
-        )}
+        {/* Use a div with background-image for better fallback handling */}
+        <div 
+          className="w-full h-full bg-cover bg-center"
+          style={{ 
+            backgroundImage: `url(${imageSrc})`,
+            backgroundSize: 'contain',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+            backgroundColor: '#f3f4f6' // light gray background
+          }}
+        >
+          {!is_available && (
+            <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center">
+              <span className="text-white font-medium text-lg">Out of Stock</span>
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="p-4">

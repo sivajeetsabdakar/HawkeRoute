@@ -4,6 +4,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { CartProvider } from "@/contexts/CartContext";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import { Toaster } from "react-hot-toast";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -32,6 +33,26 @@ export default function RootLayout({ children }) {
               {children}
             </main>
             <Footer />
+            <Toaster 
+              position="bottom-right"
+              toastOptions={{
+                duration: 3000,
+                style: {
+                  background: '#333',
+                  color: '#fff',
+                },
+                success: {
+                  style: {
+                    background: '#22c55e',
+                  },
+                },
+                error: {
+                  style: {
+                    background: '#ef4444',
+                  },
+                },
+              }}
+            />
           </CartProvider>
         </AuthProvider>
       </body>
