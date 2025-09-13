@@ -11,8 +11,7 @@ HawkeRoute is a web-based prototype that connects local hawkers and vendors with
 ## Key Features
 
 - **Hawker/Vendor Discovery:** Residents can view a list of active hawkers/vendors, their products, and locations in real-time.
-- **AI Chat Assistant:** Integrated Gemini AI chat assistant answers user queries about vendors, products, and platform usage.
-- **AI Route Optimization:** Hawkers receive AI-powered route suggestions (using Gemini API) to maximize efficiency and profits.
+- **AI Route Optimization:** Hawkers receive custom algorithm -powered route suggestions to maximize efficiency and profits.
 - **Order Placement & Tracking:** Residents can place orders and track vendor deliveries (prototype feature).
 
 
@@ -20,15 +19,14 @@ HawkeRoute is a web-based prototype that connects local hawkers and vendors with
 
 - **Frontend:** Next.js (React), Tailwind CSS
 - **Backend:** Python (Flask, SQLAlchemy, Celery)
-- **Database:** SQL Server (for prototype; can be adapted to Firebase/Firestore)
-- **Other:** Google Maps API, Firebase (optional)
+- **Database:** SQL Server 
+- **Other:** Google Maps API
 
 ## Setup Instructions
 
 ### Prerequisites
 - Python 3.8+
 - Node.js 18+
-- Access to Google Gemini API (API key)
 - Firebase project for authentication/hosting
 - SQL Server running locally or in the cloud
 
