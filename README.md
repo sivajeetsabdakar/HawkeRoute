@@ -43,8 +43,6 @@ HawkeRoute is a web-based prototype that connects local hawkers and vendors with
 3. Set up your environment variables in a `.env` file:
    ```env
    DATABASE_URL=mssql+pyodbc://sa:your_password@localhost\\SQLEXPRESS/your_db?driver=ODBC+Driver+18+for+SQL+Server&TrustServerCertificate=yes
-   GEMINI_API_KEY=your-gemini-api-key
-   # Add other keys as needed
    ```
 4. Run the backend:
    ```sh
