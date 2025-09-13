@@ -12,7 +12,7 @@ HawkeRoute is a web-based prototype that connects local hawkers and vendors with
 
 - **Hawker/Vendor Discovery:** Residents can view a list of active hawkers/vendors, their products, and locations in real-time.
 - **AI Route Optimization:** Hawkers receive custom algorithm -powered route suggestions to maximize efficiency and profits.
-- **Order Placement & Tracking:** Residents can place orders and track vendor deliveries (prototype feature).
+- **Order Placement & Tracking:** Residents can place orders and track vendor deliveries.
 
 
 ## Tech Stack
@@ -20,7 +20,7 @@ HawkeRoute is a web-based prototype that connects local hawkers and vendors with
 - **Frontend:** Next.js (React), Tailwind CSS
 - **Backend:** Python (Flask, SQLAlchemy, Celery)
 - **Database:** SQL Server 
-- **Other:** Google Maps API
+- **API:** Google Maps API
 
 ## Setup Instructions
 
